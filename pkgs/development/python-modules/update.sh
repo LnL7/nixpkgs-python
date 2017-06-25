@@ -1,5 +1,5 @@
 #! /usr/bin/env nix-shell
-#! nix-shell -i bash -p python27Packages.bootstrapped-pip -p python27Packages.pbr -p python27Packages.setuptools_scm
+#! nix-shell -i bash -p stdenv.cc -p python27Packages.bootstrapped-pip -p python27Packages.pbr -p python27Packages.setuptools_scm
 set -e
 
 declare -a pipArgs=()
