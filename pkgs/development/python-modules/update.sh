@@ -18,9 +18,9 @@ cachePackages() {
         attr=${attr//==/_}
         attr=${attr//[-.]/_}
 
-        out=$(nix-build -A "$attr.src" --no-out-link) || true
+        out=$(nix-build -A "pythonPackages.$attr.src" --no-out-link) || true
         if [ -e "$out" ]; then
-          ln -sfn "$attr.src" "$cache/${out#*-}"
+          ln -sfn "$out" "$cache/${out#*-}"
         fi
       ;;
     esac
