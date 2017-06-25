@@ -20,7 +20,7 @@ cachePackages() {
 
         out=$(nix-build -A "$attr.src" --no-out-link) || true
         if [ -e "$out" ]; then
-          nix-build -A "$attr.src" -o "$cache/${out#*-}" >&2 || true
+          ln -sfn "$attr.src" "$cache/${out#*-}"
         fi
       ;;
     esac
