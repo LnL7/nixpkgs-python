@@ -86,6 +86,7 @@ printVersion() {
   attr=${attr//[-.]/_}
   pname=${file,,}
   pname=${pname%-*}
+  pname=${pname//[-.]/_}
 
   echo "  ${pname} = ${attr};"
 }
