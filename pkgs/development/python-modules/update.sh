@@ -1,5 +1,5 @@
 #! /usr/bin/env nix-shell
-#! nix-shell -i bash -p python27Packages.bootstrapped-pip
+#! nix-shell -i bash -p python27Packages.bootstrapped-pip -p python27Packages.pbr -p python27Packages.setuptools_scm
 set -e
 
 declare -a pipArgs=()
@@ -7,7 +7,7 @@ if [ -n "$pip_index_url" ]; then pipArgs+=(--index-url "$pip_index_url"); fi
 if [ -n "$pip_trusted_host" ]; then pipArgs+=(--trusted-host "$pip_trusted_host"); fi
 
 downloadPackages() {
-  pip download "$@" -d cache -f cache --no-binary :all: "${pipArgs[@]}" >&2 || true
+  pip download "$@" -d cache -f cache --no-binary :all: "${pipArgs[@]}" >&2
   cd cache
 }
 

@@ -1,14 +1,12 @@
-{ stdenv, fetchpypi, python, pip }:
+{ stdenv, python, pip }:
 
 { pname
 , version
-, sha256 ? ""
-, src ? fetchpypi { inherit pname version sha256; }
+, src
 , pythonEnv ? null
 , buildDepends ? []
 , buildInputs ? [], propagatedBuildInputs ? []
 , nativeBuildInputs ? [], propagatedNativeBuildInputs ? []
-, NIX_CFLAGS_COMPILE ? ""
 , ...
 }@args:
 
@@ -21,21 +19,19 @@ let
 
 in
 
-stdenv.mkDerivation ({
+stdenv.mkDerivation (args // {
   name = "${python.name}-whl-${pname}-${version}";
   inherit src;
   inherit pipWheels python;
 
+  PYTHONPATH = optionalString (pythonEnv != null) "${pythonEnv}/${sitePackages}";
   SOURCE_DATE_EPOCH = "315542800";
 
-  PYTHONPATH = optionalString (pythonEnv != null) "${pythonEnv}/${sitePackages}";
-
-  nativeBuildInputs = buildDepends;
+  buildInputs = buildDepends;
 
   unpackPhase = ":";
 
   buildPhase = ''
-    mkdir tmp
     ${pip}/bin/pip wheel ${src} -w . --no-cache-dir --no-deps --no-index
   '';
 
@@ -48,5 +44,4 @@ stdenv.mkDerivation ({
 // optionalAttrs (propagatedBuildInputs != [])       { inherit propagatedBuildInputs; }
 // optionalAttrs (nativeBuildInputs != [])           { inherit nativeBuildInputs; }
 // optionalAttrs (propagatedNativeBuildInputs != []) { inherit propagatedNativeBuildInputs; }
-// optionalAttrs (NIX_CFLAGS_COMPILE != "")          { inherit NIX_CFLAGS_COMPILE; }
 )

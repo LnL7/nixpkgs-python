@@ -12,7 +12,7 @@ let
 in
 
 stdenv.mkDerivation {
-  inherit name version;
+  inherit name pname version sha256;
   phases = [ "unpackPhase" "installPhase" ];
 
   impureEnvVars = [ "pip_index_url" "pip_trusted_host" ];
