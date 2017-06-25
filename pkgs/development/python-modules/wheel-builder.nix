@@ -15,14 +15,14 @@ let
   inherit (stdenv.lib) optionalAttrs optionalString;
   inherit (python) sitePackages;
 
-  pipWheels = "share/pip/wheelhouse";
+  wheelhouse = "share/pip/wheelhouse";
 
 in
 
 stdenv.mkDerivation (args // {
   name = "${python.name}-whl-${pname}-${version}";
   inherit src;
-  inherit pipWheels python;
+  inherit wheelhouse python;
 
   PYTHONPATH = optionalString (pythonEnv != null) "${pythonEnv}/${sitePackages}";
   SOURCE_DATE_EPOCH = "315542800";
@@ -36,8 +36,8 @@ stdenv.mkDerivation (args // {
   '';
 
   installPhase = ''
-    mkdir -p $out/${pipWheels}
-    cp *.whl $out/${pipWheels}
+    mkdir -p $out/${wheelhouse}
+    cp *.whl $out/${wheelhouse}
   '';
 }
 // optionalAttrs (buildInputs != [])                 { inherit buildInputs; }

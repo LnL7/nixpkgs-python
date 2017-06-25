@@ -18,6 +18,7 @@ let
   inherit (stdenv.lib) optional optionalAttrs optionalString;
 
   inherit (python) sitePackages;
+  inherit (wheel) wheelhouse;
 
   env = buildEnv {
     name = "${python.name}-environment";
@@ -39,14 +40,15 @@ in
 stdenv.mkDerivation ({
   name = "${python.name}-${pname}-${version}";
   inherit pname version sha256;
-  inherit env python wheel;
+  inherit env python wheel wheelhouse;
+
+  passthru.src = wheel.src;
 
   src = wheel;
-  passthru.src = wheel.src;
 
   installPhase = ''
     mkdir -p $out/${sitePackages}
-    ${pip}/bin/pip install ${wheel.pipWheels}/* -t $out/${sitePackages} --no-cache-dir --no-deps --no-index
+    ${pip}/bin/pip install ${wheelhouse}/* -t $out/${sitePackages} --no-cache-dir --no-deps --no-index
 
     rm -r $out/${sitePackages}/tests || true
   '';

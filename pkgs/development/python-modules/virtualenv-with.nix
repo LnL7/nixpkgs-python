@@ -32,7 +32,7 @@ let
 
       if ! test -d venv; then
         ${virtualenv}/bin/virtualenv venv
-        pip install ${concatMapStringsSep " " (x: "${x.src}/${x.src.pipWheels}/*") pythonInputs} -I --no-deps
+        pip install ${concatMapStringsSep " " (x: "${x.src}/${x.wheelhouse}/*") pythonInputs} -I --no-deps
 
         ${installHook}
       fi
