@@ -36,12 +36,12 @@ stdenv.mkDerivation ({
 
   buildPhase = ''
     mkdir tmp
-    ${pip}/bin/pip wheel ${src} -w ./tmp --no-cache-dir --no-deps --no-index
+    ${pip}/bin/pip wheel ${src} -w . --no-cache-dir --no-deps --no-index
   '';
 
   installPhase = ''
     mkdir -p $out/${pipWheels}
-    cp tmp/* $out/${pipWheels}
+    cp *.whl $out/${pipWheels}
   '';
 }
 // optionalAttrs (buildInputs != [])                 { inherit buildInputs; }

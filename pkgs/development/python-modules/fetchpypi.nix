@@ -1,11 +1,15 @@
-{ stdenv, writeText, pip }:
+{ stdenv, types, writeText, pip }:
 
 { pname
 , version
 , sha256
-, type ? "tar.gz"
+, type ? types.targz
 , name ? "${pname}-${version}.${type}"
 }:
+
+let
+  unlessWheel = stdenv.lib.optionalString (type != types.whl);
+in
 
 stdenv.mkDerivation {
   inherit name version;
@@ -21,7 +25,7 @@ stdenv.mkDerivation {
     if [ -n "$pip_index_url" ]; then pipArgs+=(--index-url "$pip_index_url"); fi
     if [ -n "$pip_trusted_host" ]; then pipArgs+=(--trusted-host "$pip_trusted_host"); fi
 
-    ${pip}/bin/pip download '${pname}==${version}' -d . --no-binary :all: --no-cache-dir --no-deps "''${pipArgs[@]}" || true
+    ${pip}/bin/pip download '${pname}==${version}' ${unlessWheel "--no-binary :all:"} -d . --no-cache-dir --no-deps "''${pipArgs[@]}" || true
   '';
 
   installPhase = ''

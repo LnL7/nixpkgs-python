@@ -7,10 +7,13 @@
 let
 
   inherit (stdenv.lib) fix' extends makeExtensible;
+  inherit (lib) types;
+
+  lib = import ./lib.nix { inherit pkgs; };
 
   pythonPackages = self:
     let
-      fetchpypi = callPackage ./fetchpypi.nix { };
+      fetchpypi = callPackage ./fetchpypi.nix { inherit types; };
       buildWheel = callPackage ./wheel-builder.nix { };
 
       mkDerivation = callPackage ./generic-builder.nix { };
@@ -19,19 +22,12 @@ let
         overrideScope = f: callPackageWithScope (mkScope (fix' (extends f scope.__unfix__))) drv args;
       };
 
-      mkScope = scope: pkgs // scope;
+      mkScope = scope: pkgs // scope // { inherit types; };
       defaultScope = mkScope self;
       callPackage = drv: args: callPackageWithScope defaultScope drv args;
 
       virtualenvWith = callPackage ./virtualenv-with.nix {
         pythonPackages = self;
-      };
-
-      types = {
-        tar = "tar.gz";
-        tarbz = "tar.bz2";
-        tgz = "tgz";
-        zip = "zip";
       };
 
     in
