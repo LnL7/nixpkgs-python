@@ -41,5 +41,5 @@ in
 
   makeExtensible
     (extends overrides
-      (extends versions
-        (extends common pythonPackages)))
+      (extends common
+        (extends versions pythonPackages)))
