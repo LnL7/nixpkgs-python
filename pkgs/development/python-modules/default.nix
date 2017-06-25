@@ -9,6 +9,7 @@ let
   inherit (stdenv.lib) fix' extends makeExtensible;
   inherit (lib) types;
 
+  common = import ./configuration-common.nix { inherit pkgs stdenv; };
   lib = import ./lib.nix { inherit pkgs; };
 
   pythonPackages = self:
@@ -41,4 +42,4 @@ in
   makeExtensible
     (extends overrides
       (extends versions
-        (extends configurationCommon pythonPackages)))
+        (extends common pythonPackages)))
