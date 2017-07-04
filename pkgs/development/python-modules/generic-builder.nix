@@ -48,7 +48,7 @@ stdenv.mkDerivation ({
 
   installPhase = ''
     mkdir -p $out/${sitePackages}
-    ${pip}/bin/pip install ${wheelhouse}/* -t $out/${sitePackages} --no-cache-dir --no-deps --no-index
+    ${pip}/bin/pip install ${wheelhouse}/* --prefix $out --ignore-installed --no-cache-dir --no-deps --no-index
 
     rm -r $out/${sitePackages}/tests || true
   '';

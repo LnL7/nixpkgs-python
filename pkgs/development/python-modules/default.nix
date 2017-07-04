@@ -27,14 +27,20 @@ let
       defaultScope = mkScope self;
       callPackage = drv: args: callPackageWithScope defaultScope drv args;
 
+      pythonWithPackages = packages: pythonWith { inherit packages; };
+
+      pythonWith = callPackage ./python-with.nix {
+        pythonPackages = self;
+      };
+
       virtualenvWith = callPackage ./virtualenv-with.nix {
         pythonPackages = self;
       };
 
     in
       import ./pypi-packages.nix { inherit pkgs stdenv callPackage types; } self // {
-        inherit python pip virtualenv;
-        inherit mkDerivation callPackage fetchpypi buildWheel virtualenvWith;
+        inherit python pip virtualenv pythonWithPackages pythonWith virtualenvWith;
+        inherit mkDerivation callPackage fetchpypi buildWheel;
       };
 
 in

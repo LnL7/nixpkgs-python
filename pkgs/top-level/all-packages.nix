@@ -7,7 +7,7 @@ in
 {
   toplevel = rec {
     inherit (self) pkgs;
-    inherit (pythonPackages) virtualenvWith;
+    inherit (pythonPackages) python pythonWith virtualenvWith;
 
     pythonPackages = callPackage ../development/python-modules {
       inherit (self.python27Packages) python virtualenv;
