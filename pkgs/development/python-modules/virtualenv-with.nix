@@ -9,10 +9,11 @@
 
 let
 
-  inherit (stdenv.lib) concatMapStringsSep;
+  inherit (stdenv.lib) concatStringsSep;
   inherit (python) sitePackages;
 
   pythonInputs = installPackages pythonPackages;
+  pythonWheels = map (pkg: "${pkg.wheelhouse}/*.whl") pythonInputs;
 
   pythonEnv = buildEnv {
     name = "${python.name}-environment";
@@ -32,7 +33,7 @@ let
 
       if ! test -d venv; then
         ${virtualenv}/bin/virtualenv venv
-        pip install ${concatMapStringsSep " " (x: "${x.src}/${x.wheelhouse}/*") pythonInputs} -I --no-deps
+        pip install ${concatStringsSep " " pythonWheels} -I --no-deps
 
         ${installHook}
       fi
