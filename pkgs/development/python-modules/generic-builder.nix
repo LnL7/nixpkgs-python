@@ -44,7 +44,7 @@ stdenv.mkDerivation (rec {
   src = wheel;
   wheelhouse = "${wheel}/${wheel.wheelhouse}";
 
-  passthru.src = wheel.src;
+  buildInputs = systemDepends;
 
   installPhase = ''
     mkdir -p $out/${sitePackages}
@@ -52,6 +52,8 @@ stdenv.mkDerivation (rec {
 
     rm -r $out/${sitePackages}/tests || true
   '';
+
+  passthru.src = wheel.src;
 }
 // optionalAttrs (buildInputs != [])                 { inherit buildInputs; }
 // optionalAttrs (propagatedBuildInputs != [])       { inherit propagatedBuildInputs; }
