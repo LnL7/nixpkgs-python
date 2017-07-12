@@ -10,7 +10,7 @@ in
 let
   packages = import ./pkgs/top-level/all-packages.nix;
 
-  nixpkgsFun = newArgs: import nixpkgs (args // newArgs);
+  nixpkgsFun = newArgs: import nixpkgs (builtins.removeAttrs args ["nixpkgs"] // newArgs);
 
   pkgs = nixpkgsFun {
     overlays = [ packages ] ++ overlays;
