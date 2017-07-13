@@ -5,13 +5,13 @@ let
 in
 
 {
-  toplevel = rec {
+  toplevel = super.recurseIntoAttrs rec {
     inherit (self) pkgs;
     inherit (pythonPackages) python pythonWith virtualenvWith;
 
-    pythonPackages = callPackage ../development/python-modules {
+    pythonPackages = super.recurseIntoAttrs (callPackage ../development/python-modules {
       inherit (self.python27Packages) python virtualenv;
       pip = self.python27Packages.bootstrapped-pip;
-    };
+    });
   };
 }
