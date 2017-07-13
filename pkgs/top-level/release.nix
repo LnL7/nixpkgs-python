@@ -24,6 +24,6 @@
 }:
 
 let
-  jobs = import (builtins.toString nixpkgs + "/" + release) { inherit nixpkgsArgs; };
+  jobs = import (builtins.toString nixpkgs + "/" + release) { inherit officialRelease supportedSystem scrubJobs nixpkgsArgs; };
 in
   jobs.toplevel
