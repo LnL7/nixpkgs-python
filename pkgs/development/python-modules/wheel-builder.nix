@@ -1,4 +1,4 @@
-{ stdenv, python, pip }:
+{ stdenv, unzip, python, pip }:
 
 { pname
 , version
@@ -12,7 +12,7 @@
 
 let
 
-  inherit (stdenv.lib) optionalAttrs optionalString;
+  inherit (stdenv.lib) optional optionalAttrs optionalString;
   inherit (python) sitePackages;
 
   wheelhouse = "share/pip/wheelhouse";
@@ -27,17 +27,16 @@ stdenv.mkDerivation (args // {
   PYTHONPATH = optionalString (pythonEnv != null) "${pythonEnv}/${sitePackages}";
   SOURCE_DATE_EPOCH = "315542800";
 
-  buildInputs = buildDepends;
-
-  unpackPhase = ":";
+  buildInputs = optional (builtins.match ".*\.zip" "${src}" != null) [ unzip ];
+  propagatedBuildInputs = buildDepends;
 
   buildPhase = ''
-    ${pip}/bin/pip wheel ${src} -w . --no-cache-dir --no-deps --no-index
+    ${pip}/bin/pip wheel . -w dist --no-cache-dir --no-deps --no-index
   '';
 
   installPhase = ''
     mkdir -p $out/${wheelhouse}
-    cp *.whl $out/${wheelhouse}
+    cp dist/*.whl $out/${wheelhouse}
   '';
 }
 // optionalAttrs (buildInputs != [])                 { inherit buildInputs; }
