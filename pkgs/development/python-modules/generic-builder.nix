@@ -6,6 +6,7 @@
 , sha256 ? src.sha256
 , type ? ""
 , name ? ""
+, meta ? {}
 , pythonDepends ? []
 , systemDepends ? []
 , buildInputs ? [], propagatedBuildInputs ? []
@@ -19,6 +20,8 @@ let
 
   inherit (python) sitePackages;
 
+  platforms = stdenv.lib.platforms.all;
+
   env = buildEnv {
     name = "${python.name}-environment";
     paths = pythonDepends;
@@ -27,6 +30,8 @@ let
   wheel = buildWheel (args // {
     inherit pname version sha256;
     buildDepends = systemDepends;
+
+    meta = { inherit platforms; } // meta;
   }
   // optionalAttrs (src == null)         { src = fetchpypi { inherit pname version sha256; }; }
   // optionalAttrs (type != "")          { src = fetchpypi { inherit pname version sha256 type; }; }
@@ -36,7 +41,7 @@ let
 
 in
 
-stdenv.mkDerivation (rec {
+stdenv.mkDerivation ({
   name = "${python.name}-${pname}-${version}";
   inherit pname version sha256;
   inherit env python wheel;
@@ -48,12 +53,14 @@ stdenv.mkDerivation (rec {
 
   installPhase = ''
     mkdir -p $out/${sitePackages}
-    ${pip}/bin/pip install ${wheelhouse}/* --prefix $out --ignore-installed --no-cache-dir --no-deps --no-index
+    ${pip}/bin/pip install $wheelhouse/*.whl --prefix $out --ignore-installed --no-cache-dir --no-deps --no-index
 
     rm -r $out/${sitePackages}/tests || true
   '';
 
   passthru.src = wheel.src;
+
+  meta = { inherit platforms; } // meta;
 }
 // optionalAttrs (buildInputs != [])                 { inherit buildInputs; }
 // optionalAttrs (propagatedBuildInputs != [])       { inherit propagatedBuildInputs; }
