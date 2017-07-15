@@ -13,7 +13,8 @@ in
     inherit (self) pkgs;
     inherit (pythonPackages) python pythonWith virtualenvWith;
 
-    pythonWheels = recurseIntoAttrs (mapWheels self.toplevel.pythonPackages);
+    pythonSources = mapAttrs (_: v: v.src) self.toplevel.pythonWheels;
+    pythonWheels = mapWheels self.toplevel.pythonPackages;
 
     pythonPackages = recurseIntoAttrs (callPackage ../development/python-modules {
       inherit (self.python27Packages) python virtualenv;
