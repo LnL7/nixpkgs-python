@@ -2,42 +2,46 @@
 #! nix-shell -i bash -p stdenv.cc -p python27Packages.bootstrapped-pip -p python27Packages.pbr -p python27Packages.setuptools_scm
 set -e
 
-declare -a pipArgs=()
-if [ -n "$pip_index_url" ]; then pipArgs+=(--index-url "$pip_index_url"); fi
-if [ -n "$pip_trusted_host" ]; then pipArgs+=(--trusted-host "$pip_trusted_host"); fi
+declare -a pipArgs
+if [ -n "$pip_index_url" ]; then pipArgs+=(--index-url $pip_index_url); fi
+if [ -n "$pip_trusted_host" ]; then pipArgs+=(--trusted-host $pip_trusted_host); fi
 
 cachePackages() {
-  local attr out
-  local cache="$1"
-  shift 1
+  local root=$PWD
 
-  for pkg in $(cat); do
-    case "$pkg" in
-      *==*)
-        attr=${pkg,,}
-        attr=${attr//==/_}
-        attr=${attr//[-.]/_}
+  mkdir -p cache gcroots
 
-        out=$(nix-build -A "pythonPackages.$attr.src" --no-out-link) || true
-        if [ -e "$out" ]; then
-          ln -sfn "$out" "$cache/${out#*-}"
-        fi
-      ;;
-    esac
+  for f in $(cd gcroots; nix-build "$root" -A pythonSources); do
+    ln -sfn "$f" "cache/${f#*-}"
   done
 }
 
 downloadPackages() {
-  local cache
-  cache=$PWD/cache
-  mkdir -p "$cache"
+  local -a pkgs
+  mkdir -p cache
 
-  if [ "$1" = -r ]; then
-    cachePackages "$cache" < "$2"
-  fi
+  while (($#)); do
+    case $1 in
+      -r)
+        downloadPackages "$(cat "$2")"
+        shift 2
+        ;;
+      *==*)
+        if ! find cache -type f -iname "${1//==/-}.*"; then
+          pkgs+=($1)
+        fi
+        shift
+        ;;
+      *)
+        pkgs+=($1)
+        shift
+        ;;
+    esac
+  done
 
-  pip download "$@" -d "$cache" -f "$cache" --no-binary :all: "${pipArgs[@]}" >&2
-  cd "$cache"
+  for p in "${pkgs[@]}"; do
+    pip download "$p" -d cache -f cache --no-binary :all: "${pipArgs[@]}" >&2
+  done
 }
 
 printExpression() {
@@ -46,7 +50,8 @@ printExpression() {
   shift 1
 
   attr=${file,,}
-  attr=${attr%%.[^0-9]*}
+  attr=${attr%.[^0-9]*}
+  attr=${attr%.[^0-9]*}
   attr=${attr//[-.]/_}
   pname=${file%-*}
   version=${file}
@@ -76,40 +81,14 @@ EONIX
   echo "     }) {};"
 }
 
-printVersion() {
-  local attr args ext pname version sha256
-  local file="$1"
-  shift 1
-
-  attr=${file,,}
-  attr=${attr%%.[^0-9]*}
-  attr=${attr//[-.]/_}
-  pname=${file,,}
-  pname=${pname%-*}
-  pname=${pname//[-.]/_}
-
-  echo "  ${pname} = ${attr};"
-}
-
 main() {
-  local result="$PWD/result"
-  rm -r result pip-cache-* 2> /dev/null || true
-  mkdir -p "$result"
-
+  cachePackages "$@"
   downloadPackages "$@"
 
-  echo "===============================" >&2
-  for file in *; do
-    echo | tee -a "$result/pypi-packages"
-    printExpression "$file" | tee -a "$result/pypi-packages"
-  done
-
-  echo
-  echo "===============================" >&2
-  echo
-
-  for file in *; do
-    printVersion "$file" | tee -a "$result/versions"
+  echo | tee generated-packages.nix
+  for f in cache/*; do
+    printExpression "${f##*/}" | tee -a generated-packages.nix
+    echo | tee -a generated-packages.nix
   done
 }
 
