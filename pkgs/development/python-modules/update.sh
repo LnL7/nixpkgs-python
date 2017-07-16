@@ -6,6 +6,14 @@ declare -a pipArgs
 if [ -n "$pip_index_url" ]; then pipArgs+=(--index-url $pip_index_url); fi
 if [ -n "$pip_trusted_host" ]; then pipArgs+=(--trusted-host $pip_trusted_host); fi
 
+for a in "$@"; do
+  case $a in
+    -r) ;;
+    -*) pipArgs+=("$a") ;;
+  esac
+done
+
+
 cachePackages() {
   local root=$PWD
 
