@@ -72,7 +72,7 @@ printPackage() {
   ext=${file}
   ext=${ext##*[0-9].}
   ext=${ext//./}
-  sha256=$(nix-hash --base32 --type sha256 "cache/$file")
+  sha256=$(nix-hash --flat --base32 --type sha256 "cache/$file")
 
   if [ "$ext" != targz ]; then
     args=", types"
