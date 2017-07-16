@@ -60,10 +60,13 @@ printPackage() {
   attr=${attr%.[^0-9]*}
   attr=${attr%.[^0-9]*}
   attr=${attr//[.-]/_}
-  pname=${file%-*}
+  pname=${file}
+  pname=${pname%%-[0-9]*}
   version=${file,,}
   version=${version%.[^0-9]*}
   version=${version%.[^0-9]*}
+  version=${version#[^0-9]*[.-]}
+  version=${version#[^0-9]*[.-]}
   version=${version#[^0-9]*[.-]}
   version=${version#[^0-9]*[.-]}
   ext=${file}
