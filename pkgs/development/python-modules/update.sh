@@ -10,7 +10,6 @@ cachePackages() {
   local root=$PWD
 
   mkdir -p cache gcroots
-
   for f in $(cd gcroots; nix-build "$root" -A pythonSources); do
     ln -sfn "$f" "cache/${f#*-}"
   done
@@ -44,7 +43,7 @@ downloadPackages() {
   done
 }
 
-printExpression() {
+printPackage() {
   local attr args ext pname version sha256
   local file="$1"
   shift 1
@@ -66,14 +65,14 @@ printExpression() {
     args=", types"
   fi
 
-  cat <<-EONIX
+  cat <<-EOF
   ${attr} = callPackage
     ({ mkDerivation${args} }:
      mkDerivation {
        pname = "${pname}";
        version = "${version}";
        sha256 = "${sha256}";
-EONIX
+EOF
 
   if [ "$ext" != targz ]; then
     echo "       type = types.${ext};"
@@ -81,15 +80,30 @@ EONIX
   echo "     }) {};"
 }
 
+printPackages() {
+  for f in cache/*; do
+    printPackage "${f##*/}"
+    echo
+  done
+}
+
+printExpression() {
+  cat <<-EOF
+{ pkgs, stdenv, types, callPackage }:
+
+self:
+
+{
+$(printPackages)
+}
+EOF
+}
+
 main() {
   cachePackages "$@"
   downloadPackages "$@"
 
-  echo | tee generated-packages.nix
-  for f in cache/*; do
-    printExpression "${f##*/}" | tee -a generated-packages.nix
-    echo | tee -a generated-packages.nix
-  done
+  printExpression "$@" | tee generated-packages.nix
 }
 
 main "$@"
