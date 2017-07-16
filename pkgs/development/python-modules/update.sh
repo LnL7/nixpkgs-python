@@ -64,7 +64,8 @@ printPackage() {
   version=${file,,}
   version=${version%.[^0-9]*}
   version=${version%.[^0-9]*}
-  version=${version##*-}
+  version=${version#[^0-9]*[.-]}
+  version=${version#[^0-9]*[.-]}
   ext=${file}
   ext=${ext##*[0-9].}
   ext=${ext//./}
