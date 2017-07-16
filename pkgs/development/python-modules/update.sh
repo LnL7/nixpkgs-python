@@ -51,11 +51,10 @@ printPackage() {
   attr=${file,,}
   attr=${attr%.[^0-9]*}
   attr=${attr%.[^0-9]*}
-  attr=${attr//[-.]/_}
+  attr=${attr//[.-]/_}
   pname=${file%-*}
-  version=${file}
+  version=${file,,}
   version=${version##*-}
-  version=${version%%.[^0-9]*}
   ext=${file}
   ext=${ext##*[0-9].}
   ext=${ext//./}
