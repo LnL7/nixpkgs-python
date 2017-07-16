@@ -28,8 +28,8 @@ let
     SOURCE_DATE_EPOCH = "315542800";
 
     shellHook = ''
-      export PATH="$PWD/venv/bin''${PATH:+:}$PATH"
-      export PYTHONPATH="${pythonEnv}/${sitePackages}:$PWD/venv/${sitePackages}''${PYTHONPATH:+:}$PYTHONPATH"
+      export PATH="$PWD/venv/bin:$PWD/venv/nix-profile/bin''${PATH:+:}$PATH"
+      export PYTHONPATH="$PWD/venv/${sitePackages}:$PWD/venv/nix-profile/${sitePackages}''${PYTHONPATH:+:}$PYTHONPATH"
 
       if ! test -d venv; then
         ${virtualenv}/bin/virtualenv venv
@@ -37,6 +37,8 @@ let
 
         ${installHook}
       fi
+
+      nix-env -p venv/nix-profile --set ${pythonEnv}
 
       ${shellHook}
     '';
