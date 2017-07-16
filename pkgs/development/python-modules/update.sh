@@ -26,7 +26,7 @@ downloadPackages() {
         shift 2
         ;;
       *==*)
-        if ! find cache -type f -iname "${1//==/-}.*"; then
+        if [ -z $(find cache -type f -iname "${1//==/-}.*") ]; then
           pkgs+=($1)
         fi
         shift
@@ -102,7 +102,6 @@ EOF
 main() {
   cachePackages "$@"
   downloadPackages "$@"
-
   printExpression "$@" | tee generated-packages.nix
 }
 
