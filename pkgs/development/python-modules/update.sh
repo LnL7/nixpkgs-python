@@ -60,7 +60,7 @@ printExpression() {
   ext=${file}
   ext=${ext##*[0-9].}
   ext=${ext//./}
-  sha256=$(shasum -a256 "$file" | awk '{print $1}')
+  sha256=$(nix-hash --base32 --type sha256 "cache/$file")
 
   if [ "$ext" != targz ]; then
     args=", types"
