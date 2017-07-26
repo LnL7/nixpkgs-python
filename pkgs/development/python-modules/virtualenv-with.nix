@@ -31,14 +31,15 @@ let
       export PATH="$PWD/venv/bin:$PWD/venv/nix-profile/bin''${PATH:+:}$PATH"
       export PYTHONPATH="$PWD/venv/${sitePackages}:$PWD/venv/nix-profile/${sitePackages}''${PYTHONPATH:+:}$PYTHONPATH"
 
-      if ! test -d venv; then
+      mkdir -p venv
+      nix-store -r ${pythonEnv} --indirect --add-root $PWD/venv/nix-profile > /dev/null
+
+      if ! test -e venv/bin/activate; then
         ${virtualenv}/bin/virtualenv venv
         pip install ${concatStringsSep " " pythonWheels} -I --no-deps
 
         ${installHook}
       fi
-
-      nix-env -p venv/nix-profile --set ${pythonEnv}
 
       ${shellHook}
     '';
