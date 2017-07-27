@@ -32,6 +32,7 @@ let
       export PYTHONPATH="$PWD/venv/${sitePackages}:$PWD/venv/nix-profile/${sitePackages}''${PYTHONPATH:+:}$PYTHONPATH"
 
       mkdir -p venv
+      if test -L venv/nix-profile; then rm venv/nix-profile; fi
       nix-store -r ${pythonEnv} --indirect --add-root $PWD/venv/nix-profile > /dev/null
 
       if ! test -e venv/bin/activate; then
