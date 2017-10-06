@@ -29,9 +29,10 @@ let
 
     shellHook = ''
       export PATH="$PWD/venv/bin:$PWD/venv/nix-profile/bin''${PATH:+:}$PATH"
-      export PYTHONPATH="$PWD/venv/${sitePackages}:$PWD/venv/nix-profile/${sitePackages}''${PYTHONPATH:+:}$PYTHONPATH"
 
-      mkdir -p venv
+      mkdir -p venv/${sitePackages}
+      echo ${pythonEnv}/${sitePackages} > venv/${sitePackages}/${pythonEnv.name}.pth
+
       if test -L venv/nix-profile; then rm venv/nix-profile; fi
       nix-store -r ${pythonEnv} --indirect --add-root $PWD/venv/nix-profile > /dev/null
 
