@@ -31,10 +31,12 @@ let
       export PATH="$PWD/venv/bin:$PWD/venv/nix-profile/bin''${PATH:+:}$PATH"
 
       mkdir -p venv/${sitePackages}
-      echo ${pythonEnv}/${sitePackages} > venv/${sitePackages}/${pythonEnv.name}.pth
 
-      if test -L venv/nix-profile; then rm venv/nix-profile; fi
-      nix-store -r ${pythonEnv} --indirect --add-root $PWD/venv/nix-profile > /dev/null
+      if test ${pythonEnv} != "$(readlink venv/nix-profile)"; then
+        rm venv/nix-profile 2> /dev/null || true
+        echo ${pythonEnv}/${sitePackages} > venv/${sitePackages}/${pythonEnv.name}.pth
+        nix-store -r ${pythonEnv} --indirect --add-root $PWD/venv/nix-profile > /dev/null
+      fi
 
       if ! test -e venv/bin/activate; then
         ${virtualenv}/bin/virtualenv venv
