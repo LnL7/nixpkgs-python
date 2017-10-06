@@ -15,10 +15,8 @@
 } @ args:
 
 let
-
   inherit (stdenv.lib) optional optionalAttrs optionalString;
-
-  inherit (python) sitePackages;
+  inherit (python) pythonVersion sitePackages;
 
   platforms = stdenv.lib.platforms.all;
 
@@ -56,6 +54,12 @@ stdenv.mkDerivation ({
     ${pip}/bin/pip install $wheelhouse/*.whl --prefix $out --ignore-installed --no-cache-dir --no-deps --no-index
 
     rm -r $out/${sitePackages}/tests || true
+  '';
+
+  postFixup = ''
+    for f in $out/bin/*; do
+      substituteInPlace "$f" --replace '${python.interpreter}' '/usr/bin/env python${pythonVersion}'
+    done
   '';
 
   passthru.src = wheel.src;
