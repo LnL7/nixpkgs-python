@@ -18,7 +18,7 @@ cachePackages() {
   local root=$PWD
 
   mkdir -p cache gcroots
-  for f in $(cd gcroots; nix-build "$root" -A pythonSources); do
+  for f in $(cd gcroots; NIXPKGS_ALLOW_BROKEN=1 nix-build "$root" -A pythonSources); do
     ln -sfn "$f" "cache/${f#*-}"
   done
 }
