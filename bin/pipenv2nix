@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 set -e
 
-update-index "$@" $(freeze-requirements) | generate-expressions
+freeze-requirements "$@"
+update-index "$@" -r requirements.txt | generate-expressions
