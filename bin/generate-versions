@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -e
+
+while IFS=$'\r\n' read -r item; do
+
+key=$(jq -nr '$item.key' --argjson item "$item")
+version=$(jq -nr '$item.version' --argjson item "$item")
+attribute=${key}_${version//./_}
+
+cat <<-EOF
+  ${key} = self.${attribute};
+EOF
+
+done
+
+# vim:set ft=sh:

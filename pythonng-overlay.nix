@@ -2,7 +2,18 @@ self: super:
 
 let
   inherit (super) pkgs stdenv callPackages;
+  inherit (super.lib) extends makeExtensible;
   inherit (self.pythonng) interpreter packages;
+
+  cpython27 = interpreter.cpython27 // packages.cpython27;
+  cpython36 = interpreter.cpython36 // packages.cpython36;
+
+  versionSet = import ./python-modules/pypi-versions.nix;
+
+  pythonSet = python: pythonPackages: import ./python-modules/pypi-packages.nix {
+    callPackage = stdenv.lib.callPackageWith (pkgs // python);
+    inherit pkgs pythonPackages;
+  };
 in
 
 {
@@ -30,13 +41,6 @@ in
     };
   };
 
-  pythonng.packages.cpython27 = import ./python-modules/pypi-packages.nix {
-    inherit pkgs;
-    callPackage = stdenv.lib.callPackageWith (pkgs // interpreter.cpython27 // packages.cpython27);
-  };
-
-  pythonng.packages.cpython36 = import ./python-modules/pypi-packages.nix {
-    inherit pkgs;
-    callPackage = stdenv.lib.callPackageWith (pkgs // interpreter.cpython36 // packages.cpython36);
-  };
+  pythonng.packages.cpython27 = makeExtensible (extends versionSet (pythonSet cpython27));
+  pythonng.packages.cpython36 = makeExtensible (extends versionSet (pythonSet cpython36));
 }
