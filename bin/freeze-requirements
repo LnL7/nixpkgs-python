@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+export PIPENV_CACHE_DIR=$HOME/.cache/pipenv
+
+rm -f Pipfile.lock
+pipenv lock "$@"
+
+jq -r '.default | to_entries[] | [.key, .value.version] | join("")' < Pipfile.lock | tee requirements.txt
