@@ -46,7 +46,7 @@ with open(PIPENV_LOCKFILE, 'r') as fd:
 
 
 packages = args.packages or []
-for file in args.requirement:
+for file in args.requirement or []:
     with open(file, 'r') as fd:
         for line in fd.readlines():
             packages.append(line)
