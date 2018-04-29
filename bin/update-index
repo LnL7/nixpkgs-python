@@ -1,0 +1,85 @@
+#!/usr/bin/env python
+import argparse
+import json
+import os.path
+import sys
+from pip._vendor.distlib.locators import JSONLocator, SimpleScrapingLocator
+from pip._vendor.distlib.locators import parse_requirement
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Resolve pypi sources.')
+    parser.add_argument('requirements', metavar='spec', type=str, nargs='*',
+                        help='package requirement specifiers')
+    parser.add_argument('-V', '--python', type=str, default='3.6',
+                        help='Python version to resolve dependencies for.')
+    parser.add_argument('--no-cache', action='store_true', default=False,
+                        help='Disable the cache')
+    parser.add_argument('-i', '--index-url', type=str, action='append',
+                        help='URLs of python package indexes')
+
+    args = parser.parse_args()
+else:
+    args = None
+
+
+DEPCACHE_FILE = os.path.expanduser('~/.cache/pipenv/depcache-py{}.json'.format(args.python))
+INDEX_FILE = os.path.expanduser('index-py{}.json'.format(args.python))
+PIPENV_LOCKFILE = os.path.expanduser('Pipfile.lock')
+
+if os.path.exists(INDEX_FILE):
+    with open(INDEX_FILE, 'r') as fd:
+        INDEX = json.load(fd)
+else:
+    INDEX = {}
+
+CACHE = INDEX.setdefault('cache', {})
+
+with open(DEPCACHE_FILE, 'r') as fd:
+    DEPCACHE = json.load(fd).get('dependencies')
+
+with open(PIPENV_LOCKFILE, 'r') as fd:
+    PIPENV_LOCK = json.load(fd).get('default')
+
+
+locators = []
+# locators = [JSONLocator(scheme='legacy')]
+for index_url in args.index_url or ['https://pypi.org/simple']:
+    locators.append(SimpleScrapingLocator(index_url, scheme='legacy'))
+
+for spec in args.requirements or []:
+    if not args.no_cache:
+        req = parse_requirement(spec)
+        version = PIPENV_LOCK[req.name]['version'].lstrip('==')
+        data = CACHE.get(req.name, {}).get(version, {})
+    else:
+        data = {}
+
+    dist = None
+    if not data:
+        for dist in (d for d in (l.locate(spec) for l in locators) if d):
+            data.update({'key': dist.key, 'name': dist.name, 'version': dist.version})
+            # for key in ('build_requires', 'run_requires', 'dev_requires', 'test_requires'):
+            #     if getattr(dist, key):
+            #         data.update({key: list(getattr(dist, key))})
+            srcs = data.setdefault('srcs', [])
+            for url, digest in dist.digests.items():
+                hash_algo, hash = digest
+                if not url.endswith('.whl') and hash_algo == 'sha256':
+                    srcs.append({'url': url, hash_algo: hash})
+        # for req in map(parse_requirement, DEPCACHE[dist.key][dist.version]):
+        #     data['run_requires'] = [req.requirement]
+        deps = data.setdefault('deps', [])
+        for req in map(parse_requirement, DEPCACHE[dist.key][dist.version]):
+            if req and req.name not in ('setuptools',):
+                version = PIPENV_LOCK[req.name]['version'].lstrip('==')
+                deps.append({'key': req.name, 'version': version})
+    if data:
+        print(json.dumps(data))
+    if dist:
+        CACHE.setdefault(dist.key, {})[dist.version] = data
+
+with open(INDEX_FILE, 'w') as fd:
+    json.dump(INDEX, fd)
+
+# vim:set ft=python:
