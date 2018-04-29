@@ -2,4 +2,4 @@
 set -e
 
 freeze-requirements "$@"
-update-index "$@" -r requirements.txt | generate-expressions
+update-index "$@" -r requirements.txt | generate-packages

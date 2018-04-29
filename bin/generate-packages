@@ -10,7 +10,7 @@ url=$(jq -nr '$item.srcs[0].url' --argjson item "$item")
 sha256=$(jq -nr '$item.srcs[0].sha256' --argjson item "$item")
 
 sysdeps=()
-deps=( $(jq -nr '$item.deps[] | [.key, .version] | join("_") | gsub("\\."; "_")' --argjson item "$item") )
+pydeps=( $(jq -nr '$item.deps[].key' --argjson item "$item") )
 
 attribute=${key}_${version//./_}
 
