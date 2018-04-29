@@ -5,12 +5,15 @@ import os.path
 import sys
 from pip._vendor.distlib.locators import JSONLocator, SimpleScrapingLocator
 from pip._vendor.distlib.locators import parse_requirement
+from pip._vendor.distlib.markers import interpret
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Resolve pypi sources.')
-    parser.add_argument('requirements', metavar='spec', type=str, nargs='*',
+    parser.add_argument('packages', metavar='package', type=str, nargs='*',
                         help='package requirement specifiers')
+    parser.add_argument('-r', '--requirement', metavar='file', type=str, nargs='*',
+                        help='requirements file')
     parser.add_argument('-V', '--python', type=str, default='3.6',
                         help='Python version to resolve dependencies for.')
     parser.add_argument('--no-cache', action='store_true', default=False,
@@ -42,12 +45,23 @@ with open(PIPENV_LOCKFILE, 'r') as fd:
     PIPENV_LOCK = json.load(fd).get('default')
 
 
+packages = args.packages or []
+for file in args.requirement:
+    with open(file, 'r') as fd:
+        for line in fd.readlines():
+            packages.append(line)
+
+
 locators = []
 # locators = [JSONLocator(scheme='legacy')]
 for index_url in args.index_url or ['https://pypi.org/simple']:
     locators.append(SimpleScrapingLocator(index_url, scheme='legacy'))
 
-for spec in args.requirements or []:
+for spec in packages:
+    spec, _, expr = spec.partition(';')
+    if expr and not interpret(expr):
+        continue
+
     if not args.no_cache:
         req = parse_requirement(spec)
         version = PIPENV_LOCK[req.name]['version'].lstrip('==')
@@ -70,7 +84,11 @@ for spec in args.requirements or []:
         # for req in map(parse_requirement, DEPCACHE[dist.key][dist.version]):
         #     data['run_requires'] = [req.requirement]
         deps = data.setdefault('deps', [])
-        for req in map(parse_requirement, DEPCACHE[dist.key][dist.version]):
+        for dep in DEPCACHE[dist.key][dist.version]:
+            dep, _, expr = dep.partition(';')
+            if expr and not interpret(expr):
+                continue
+            req = parse_requirement(dep)
             if req and req.name not in ('setuptools',):
                 version = PIPENV_LOCK[req.name]['version'].lstrip('==')
                 deps.append({'key': req.name, 'version': version})
