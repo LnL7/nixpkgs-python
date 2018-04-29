@@ -4,4 +4,5 @@
 , interpreter ? "cpython36"
 }:
 
-pkgs.pythonng.packages."${interpreter}"
+{ inherit (pkgs) pythonng; }
+// pkgs.pythonng.packages."${interpreter}"
