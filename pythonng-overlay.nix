@@ -31,14 +31,12 @@ in
   };
 
   pythonng.packages.cpython27 = import ./python-modules/pypi-packages.nix {
-    inherit (pkgs) fetchurl;
     inherit pkgs;
-    callPackage = stdenv.lib.callPackageWith (interpreter.cpython27 // packages.cpython27);
+    callPackage = stdenv.lib.callPackageWith (pkgs // interpreter.cpython27 // packages.cpython27);
   };
 
   pythonng.packages.cpython36 = import ./python-modules/pypi-packages.nix {
-    inherit (pkgs) fetchurl;
     inherit pkgs;
-    callPackage = stdenv.lib.callPackageWith (interpreter.cpython36 // packages.cpython36);
+    callPackage = stdenv.lib.callPackageWith (pkgs // interpreter.cpython36 // packages.cpython36);
   };
 }

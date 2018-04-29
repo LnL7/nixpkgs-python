@@ -9,25 +9,32 @@ version=$(jq -nr '$item.version' --argjson item "$item")
 url=$(jq -nr '$item.srcs[0].url' --argjson item "$item")
 sha256=$(jq -nr '$item.srcs[0].sha256' --argjson item "$item")
 
+sysdeps=()
 deps=( $(jq -nr '$item.deps[] | [.key, .version] | join("_") | gsub("\\."; "_")' --argjson item "$item") )
 
 attribute=${key}_${version//./_}
 
+# TODO: generalize known system dependencies like this.
+if [ "$key" = cffi ]; then sysdeps+=("libffi"); fi
+if [ "$key" = cryptography ]; then sysdeps+=("openssl"); fi
+
 inputexpr=
-for dep in "${deps[@]}"; do
+for dep in "${sysdeps[@]}" "${pydeps[@]}"; do
   inputexpr+=", $dep"
 done
 
 drvexpr=
-drvexpr+="${deps:+
-       pythonDepends = [ ${deps[*]} ];}"
+drvexpr+="${sysdeps:+
+       systemDepends = [ ${sysdeps[*]} ];}"
+drvexpr+="${pydeps:+
+       pythonDepends = [ ${pydeps[*]} ];}"
 
 argsexpr=
 
 cat <<-EOF
 
   ${attribute} = callPackage
-    ({ mkPythonPackage$inputexpr }:
+    ({ mkPythonPackage, fetchurl$inputexpr }:
      mkPythonPackage {
        pname = "$pname";
        version = "$version";
