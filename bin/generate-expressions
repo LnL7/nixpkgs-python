@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -e
+
+while IFS=$'\r\n' read -r item; do
+
+key=$(jq -nr '$item.key' --argjson item "$item")
+pname=$(jq -nr '$item.name' --argjson item "$item")
+version=$(jq -nr '$item.version' --argjson item "$item")
+url=$(jq -nr '$item.srcs[0].url' --argjson item "$item")
+sha256=$(jq -nr '$item.srcs[0].sha256' --argjson item "$item")
+
+deps=( $(jq -nr '$item.deps[] | [.key, .version] | join("_") | gsub("\\."; "_")' --argjson item "$item") )
+
+attribute=${key}_${version//./_}
+
+inputexpr=
+for dep in "${deps[@]}"; do
+  inputexpr+=", $dep"
+done
+
+drvexpr=
+drvexpr+="${deps:+
+       pythonDepends = [ ${deps[*]} ];}"
+
+argsexpr=
+
+cat <<-EOF
+
+  ${attribute} = callPackage
+    ({ mkPythonPackage$inputexpr }:
+     mkPythonPackage {
+       pname = "$pname";
+       version = "$version";
+       src = fetchurl {
+         url = "$url";
+         sha256 = "$sha256";
+       };$drvexpr
+     }) {$argsexpr};
+EOF
+
+done
+echo
+
+# vim:set ft=sh:
