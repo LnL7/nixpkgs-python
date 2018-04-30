@@ -10,9 +10,10 @@ let
 
   versionSet = import ./python-modules/pypi-versions.nix;
 
-  pythonSet = python: pythonPackages: import ./python-modules/pypi-packages.nix {
+  pythonSet = python: import ./python-modules/pypi-packages.nix {
     callPackage = stdenv.lib.callPackageWith (pkgs // python);
-    inherit pkgs pythonPackages;
+    inherit (python) pythonPlatform;
+    inherit pkgs;
   };
 in
 

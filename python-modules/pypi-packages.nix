@@ -1,4 +1,6 @@
-{ pkgs, pythonPackages, callPackage }:
+{ pkgs, pythonPlatform, callPackage }:
+
+self:
 
 {
 }
