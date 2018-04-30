@@ -41,7 +41,7 @@ CACHE = INDEX.setdefault('cache', {})
 with open(DEPCACHE_FILE, 'r') as fd:
     DEPCACHE = json.load(fd).get('dependencies')
 
-DEFAULT_LOCK = {'pip': {'version': '==0.9.1'}, 'setuptools': {'version': '==28.8.0'}, 'wheel': {'version': '==0.29.0'}}
+DEFAULT_LOCK = {'pip': {'version': '==9.0.1'}, 'setuptools': {'version': '==28.8.0'}, 'wheel': {'version': '==0.29.0'}}
 with open(PIPENV_LOCKFILE, 'r') as fd:
     PIPENV_LOCK = json.load(fd).get('default')
     PIPENV_LOCK.update(DEFAULT_LOCK)
@@ -88,6 +88,8 @@ for spec in packages:
         deps = data.setdefault('deps', [])
         if dist.version in DEPCACHE.get(key, {}):
             specs = DEPCACHE[key][dist.version]
+        elif key in ('pip', 'setuptools', 'wheel'):
+            specs = []
         else:
             raise Exception('could not resolve dependencies for %s %s' % (key, dist.version))
 
