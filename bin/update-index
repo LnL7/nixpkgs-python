@@ -4,7 +4,7 @@ import json
 import os.path
 import sys
 from pip._vendor.distlib.locators import JSONLocator, SimpleScrapingLocator
-from pip._vendor.distlib.locators import parse_requirement
+from pip._vendor.distlib.locators import normalize_name, parse_requirement
 from pip._vendor.distlib.markers import interpret
 
 
@@ -41,8 +41,10 @@ CACHE = INDEX.setdefault('cache', {})
 with open(DEPCACHE_FILE, 'r') as fd:
     DEPCACHE = json.load(fd).get('dependencies')
 
+DEFAULT_LOCK = {'pip': {'version': '==0.9.1'}, 'setuptools': {'version': '==28.8.0'}, 'wheel': {'version': '==0.29.0'}}
 with open(PIPENV_LOCKFILE, 'r') as fd:
     PIPENV_LOCK = json.load(fd).get('default')
+    PIPENV_LOCK.update(DEFAULT_LOCK)
 
 
 packages = args.packages or []
@@ -53,17 +55,17 @@ for file in args.requirement or []:
 
 
 locators = []
-# locators = [JSONLocator(scheme='legacy')]
 for index_url in args.index_url or ['https://pypi.org/simple']:
     locators.append(SimpleScrapingLocator(index_url, scheme='legacy'))
 
 for spec in packages:
-    spec, _, expr = spec.partition(';')
-    if expr and not interpret(expr):
+    spec, _, expr = spec.strip().partition(';')
+    if expr and all(map(interpret, expr.split(';'))):
+        # eg. enum34==1.1.6; python_version == '2.7'
         continue
 
     if not args.no_cache:
-        req = parse_requirement(spec)
+        req = parse_requirement(normalize_name(spec))
         version = PIPENV_LOCK[req.name]['version'].lstrip('==')
         data = CACHE.get(req.name, {}).get(version, {})
     else:
@@ -72,30 +74,35 @@ for spec in packages:
     dist = None
     if not data:
         for dist in (d for d in (l.locate(spec) for l in locators) if d):
-            data.update({'key': dist.key, 'name': dist.name, 'version': dist.version})
-            # for key in ('build_requires', 'run_requires', 'dev_requires', 'test_requires'):
-            #     if getattr(dist, key):
-            #         data.update({key: list(getattr(dist, key))})
+            key = normalize_name(dist.key)
+            data.update({'key': key, 'name': dist.name, 'version': dist.version})
             srcs = data.setdefault('srcs', [])
             for url, digest in dist.digests.items():
                 hash_algo, hash = digest
                 if not url.endswith('.whl') and hash_algo == 'sha256':
                     srcs.append({'url': url, hash_algo: hash})
-        # for req in map(parse_requirement, DEPCACHE[dist.key][dist.version]):
-        #     data['run_requires'] = [req.requirement]
+
+        if dist is None:
+            raise Exception('could not locate %s' % spec)
+
         deps = data.setdefault('deps', [])
-        for dep in DEPCACHE[dist.key][dist.version]:
-            dep, _, expr = dep.partition(';')
-            if expr and not interpret(expr):
+        if dist.version in DEPCACHE.get(key, {}):
+            specs = DEPCACHE[key][dist.version]
+        else:
+            raise Exception('could not resolve dependencies for %s %s' % (key, dist.version))
+
+        for spec in specs:
+            spec, _, expr = spec.partition(';')
+            if expr and all(map(interpret, expr.split(';'))):
                 continue
-            req = parse_requirement(dep)
-            if req and req.name not in ('setuptools',):
+            req = parse_requirement(normalize_name(spec))
+            if req:
                 version = PIPENV_LOCK[req.name]['version'].lstrip('==')
                 deps.append({'key': req.name, 'version': version})
     if data:
         print(json.dumps(data))
     if dist:
-        CACHE.setdefault(dist.key, {})[dist.version] = data
+        CACHE.setdefault(key, {})[dist.version] = data
 
 with open(INDEX_FILE, 'w') as fd:
     json.dump(INDEX, fd)
