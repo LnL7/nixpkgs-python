@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -e
+set -o pipefail
 
-freeze-requirements "$@"
+freeze-requirements "$@" >/dev/null
 update-index "$@" -r requirements.txt | generate-packages
+update-index "$@" -r requirements.txt | generate-versions
