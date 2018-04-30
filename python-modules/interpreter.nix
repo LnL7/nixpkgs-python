@@ -33,7 +33,7 @@ rec {
   mkPythonWheel =
     { pname, version, src
     , name ? "wheel-${pythonPlatform.abi}-${pname}-${version}"
-    , setupFlags ? [], systemDepends ? []
+    , setupFlags ? [], systemDepends ? [], pythonDepends ? []
     , buildInputs ? [], nativeBuildInputs ? []
     , propagatedBuildInputs ? []
     , ...
@@ -44,7 +44,7 @@ rec {
       nativeBuildInputs = stdenv.lib.optional (isZip src.urls) pkgs.unzip
         ++ nativeBuildInputs;
       buildInputs = [ python pip ] ++ buildInputs;
-      propagatedBuildInputs = systemDepends ++ propagatedBuildInputs;
+      propagatedBuildInputs = systemDepends ++ pythonDepends ++ propagatedBuildInputs;
 
       buildPhase = ''
         ${pythonPlatform.python} ./setup.py $setupFlags bdist_wheel
@@ -58,10 +58,10 @@ rec {
 
   mkPythonPackage =
     { pname, version, src ? null
-    , wheel ? mkPythonWheel { inherit pname version src setupFlags systemDepends; }
+    , wheel ? mkPythonWheel { inherit pname version src setupFlags systemDepends pythonDepends; }
     , name ? "python${pythonPlatform.version}-${pname}-${version}"
     , pipFlags ? [ "--ignore-installed" ] ++ defaultPipFlags
-    , setupFlags ? [], pythonDepends ? [], systemDepends ? []
+    , setupFlags ? [], systemDepends ? [], pythonDepends ? []
     , buildInputs ? [], propagatedBuildInputs ? []
     , ... }@attr:
     stdenv.mkDerivation (attr // {
