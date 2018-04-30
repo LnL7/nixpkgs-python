@@ -88,13 +88,30 @@ rec {
       installPhase = ''
         runHook preInstall
 
+        # Determinism: The interpreter is patched to write null timestamps when compiling python files.
+        # This way python doesn't try to update them when we freeze timestamps in nix store.
+        export DETERMINISTIC_BUILD=1;
+        # Determinism: We fix the hashes of str, bytes and datetime objects.
+        export PYTHONHASHSEED=0;
+        # Determinism. Whenever Python is included, it should not check user site-packages.
+        # This option is only relevant when the sandbox is disabled.
+        export PYTHONNOUSERSITE=1;
+
         ${pythonPlatform.pip} install '${pname}==${version}' $pipFlags --no-deps --no-index --find-links ./dist --prefix $out
+
+        for f in $out/bin/*; do
+            substituteInPlace $f \
+                --replace "import sys" "import sys; sys.path.append('$out/${pythonPlatform.sitePackages}')"
+        done
 
         for dep in $pythonDepends; do
             for f in $dep/${pythonPlatform.sitePackages}/*; do
                 name=''${f##*/}
                 l=$out/${pythonPlatform.sitePackages}/$name
-                if [ -L "$link" -a "$(readlink -f $f)" = "$(readlink -f $l)" ]; then
+                if [ "$name" = __pycache__ ]; then
+                    continue
+                fi
+                if [ "$(readlink -f $f)" = "$(readlink -f $l)" ]; then
                     continue
                 fi
                 if ! ln -s "$f" "$l"; then
@@ -106,11 +123,6 @@ rec {
                     false
                 fi
             done
-        done
-
-        for f in $out/bin/*; do
-            substituteInPlace $f \
-                --replace "import sys" "import sys; sys.path.append('$out/${pythonPlatform.sitePackages}')"
         done
 
         runHook postInstall
