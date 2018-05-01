@@ -1,6 +1,10 @@
-{ pkgs, config, pythonPlatform, python, stdenv, runCommand, fetchurl }:
+{ stdenv, config, buildEnv, runCommand, fetchurl, python, virtualenv, coreutils, unzip
+, interpreter, packages, pythonPlatform
+}:
 
 let
+  inherit (interpreter) pip mkPythonWheel;
+
   isZip = builtins.any (stdenv.lib.hasSuffix ".zip");
 
   defaultPipFlags = [ "--isolated" "--no-cache-dir" "--disable-pip-version-check" ];
@@ -11,11 +15,11 @@ let
   };
 in
 
-rec {
+{
   inherit pythonPlatform python;
 
   pip = runCommand "python${pythonPlatform.version}-pip"
-    { nativeBuildInputs = [ pkgs.unzip ]; buildInputs = [ python ]; }
+    { nativeBuildInputs = [ unzip ]; buildInputs = [ python ]; }
     ''
       mkdir $out
       ln -s $out .local
@@ -42,7 +46,7 @@ rec {
     stdenv.mkDerivation (attr // {
       inherit name pipFlags;
 
-      nativeBuildInputs = stdenv.lib.optional (isZip src.urls) pkgs.unzip
+      nativeBuildInputs = stdenv.lib.optional (isZip src.urls) unzip
         ++ nativeBuildInputs;
       buildInputs = [ python pip ] ++ buildInputs;
       propagatedBuildInputs = systemDepends ++ pythonDepends ++ propagatedBuildInputs;
@@ -99,11 +103,6 @@ rec {
 
         ${pythonPlatform.pip} install '${pname}==${version}' $pipFlags --no-deps --no-index --find-links ./dist --prefix $out
 
-        for f in $out/bin/*; do
-            substituteInPlace $f \
-                --replace "import sys" "import sys; sys.path.append('$out/${pythonPlatform.sitePackages}')"
-        done
-
         for dep in $pythonDepends; do
             for f in $dep/${pythonPlatform.sitePackages}/*; do
                 name=''${f##*/}
@@ -128,10 +127,26 @@ rec {
         runHook postInstall
       '';
 
+      fixupPhase = ''
+        runHook preFixup
+
+        for f in $out/bin/*; do
+            substituteInPlace $f \
+                --replace "#!${python}/bin/${pythonPlatform.python}" "#!${coreutils}/bin/env ${pythonPlatform.python}" \
+                --replace "import sys" "import sys; sys.path.append('$out/${pythonPlatform.sitePackages}')"
+        done
+
+        runHook postFixup
+      '';
+
       passthru.src = wheel;
 
       meta = with stdenv.lib; {
         meta.platforms = platforms.all;
       };
     };
+
+  virtualenvWith = import ./virtualenv-with.nix {
+    inherit stdenv buildEnv python virtualenv interpreter packages pythonPlatform;
+  };
 }

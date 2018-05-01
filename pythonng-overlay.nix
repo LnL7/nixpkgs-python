@@ -5,9 +5,6 @@ let
   inherit (super.lib) extends makeExtensible;
   inherit (self.pythonng) interpreter packages;
 
-  cpython27 = interpreter.cpython27 // packages.cpython27;
-  cpython36 = interpreter.cpython36 // packages.cpython36;
-
   configurationCommon = import ./python-modules/configuration-common.nix;
   versions = import ./python-modules/versions.nix;
 
@@ -26,6 +23,10 @@ in
 {
   pythonng.interpreter.cpython27 = callPackages ./python-modules/interpreter.nix {
     python = pkgs.python27;
+    virtualenv = pkgs.python27.pkgs.virtualenv;
+
+    interpreter = interpreter.cpython27;
+    packages = packages.cpython27;
 
     pythonPlatform = rec {
       abi = "cp27";
@@ -38,6 +39,10 @@ in
 
   pythonng.interpreter.cpython36 = callPackages ./python-modules/interpreter.nix {
     python = pkgs.python36;
+    virtualenv = pkgs.python36.pkgs.virtualenv;
+
+    interpreter = interpreter.cpython36;
+    packages = packages.cpython36;
 
     pythonPlatform = rec {
       abi = "cp36";
@@ -48,6 +53,6 @@ in
     };
   };
 
-  pythonng.packages.cpython27 = mkPackageSet cpython27;
-  pythonng.packages.cpython36 = mkPackageSet cpython36;
+  pythonng.packages.cpython27 = mkPackageSet (interpreter.cpython27 // packages.cpython27);
+  pythonng.packages.cpython36 = mkPackageSet (interpreter.cpython36 // packages.cpython36);
 }
