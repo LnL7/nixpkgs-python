@@ -65,9 +65,10 @@ for spec in packages:
         continue
 
     if not args.no_cache:
-        req = parse_requirement(normalize_name(spec))
-        version = PIPENV_LOCK[req.name]['version'].lstrip('==')
-        data = CACHE.get(req.name, {}).get(version, {})
+        key, _, version = normalize_name(spec).partition('==')
+        if not version:
+            version = PIPENV_LOCK.get(key, {}).get('version', '').lstrip('==')
+        data = CACHE.get(key, {}).get(version, {})
     else:
         data = {}
 
