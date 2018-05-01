@@ -7,17 +7,20 @@ let
 
   configurationCommon = import ./python-modules/configuration-common.nix;
   versions = import ./python-modules/versions.nix;
-
-  pypiPackages = python: import ./python-modules/pypi-packages.nix {
-    callPackage = stdenv.lib.callPackageWith (pkgs // python);
-    inherit (python) pythonPlatform;
-    inherit pkgs;
-  };
+  pypiPackages = import ./python-modules/pypi-packages.nix;
 
   mkPackageSet = python:
+    let
+      args = {
+        callPackage = stdenv.lib.callPackageWith (pkgs // python);
+        inherit (python) pythonPlatform;
+        inherit pkgs;
+      };
+    in
     makeExtensible
-      (extends configurationCommon
-        (extends versions (pypiPackages python)));
+      (extends (configurationCommon args)
+        (extends (versions args)
+          (pypiPackages args)));
 in
 
 {
