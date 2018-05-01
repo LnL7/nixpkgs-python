@@ -60,7 +60,7 @@ for index_url in args.index_url or ['https://pypi.org/simple']:
 
 for spec in packages:
     spec, _, expr = spec.strip().partition(';')
-    if expr and all(map(interpret, expr.split(';'))):
+    if expr and not all(map(interpret, expr.split(';'))):
         # eg. enum34==1.1.6; python_version == '2.7'
         continue
 
@@ -96,12 +96,14 @@ for spec in packages:
 
         for spec in specs:
             spec, _, expr = spec.partition(';')
-            if expr and all(map(interpret, expr.split(';'))):
+            if expr and not all(map(interpret, expr.split(';'))):
                 continue
+
             req = parse_requirement(normalize_name(spec))
             if req:
                 version = PIPENV_LOCK[req.name]['version'].lstrip('==')
                 deps.append({'key': req.name, 'version': version})
+
     if data:
         print(json.dumps(data))
     if dist:
