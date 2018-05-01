@@ -86,8 +86,8 @@ in
       inherit systemDepends pythonDepends;
       src = wheel;
 
-      buildInputs = [ python pip ] ++ buildInputs;
-      propagatedBuildInputs = systemDepends ++ pythonDepends ++ propagatedBuildInputs;
+      buildInputs = [ pip ] ++ buildInputs;
+      propagatedBuildInputs = [ python ] ++ systemDepends ++ pythonDepends ++ propagatedBuildInputs;
 
       installPhase = ''
         runHook preInstall
