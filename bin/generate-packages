@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
-while IFS=$'\r\n' read -r item; do
 
-key=$(jq -nr '$item.key' --argjson item "$item")
+generate() {
+
 pname=$(jq -nr '$item.name' --argjson item "$item")
-version=$(jq -nr '$item.version' --argjson item "$item")
 url=$(jq -nr '$item.srcs[0].url' --argjson item "$item")
 sha256=$(jq -nr '$item.srcs[0].sha256' --argjson item "$item")
 
@@ -14,9 +13,10 @@ pydeps=( $(jq -nr '$item.deps[].key' --argjson item "$item") )
 
 attribute=${key}_${version//./_}
 
-# TODO: generalize known system dependencies like this.
-if [ "$key" = cffi ]; then sysdeps+=("libffi"); fi
-if [ "$key" = cryptography ]; then sysdeps+=("openssl"); fi
+if [ -f "index/$key/overrides.json" ]; then
+    sysdeps+=( $(jq -r '.systemDepends[]' < "index/$key/overrides.json" 2>/dev/null) ) || true
+    pydeps+=( $(jq -r '.pythonDepends[]' < "index/$key/overrides.json" 2>/dev/null) ) || true
+fi
 
 inputexpr=
 for dep in "${sysdeps[@]}" "${pydeps[@]}"; do
@@ -32,7 +32,6 @@ drvexpr+="${pydeps:+
 argsexpr=
 
 cat <<-EOF
-
   ${attribute} = callPackage
     ({ mkPythonPackage, fetchurl$inputexpr }:
      mkPythonPackage {
@@ -45,6 +44,15 @@ cat <<-EOF
      }) {$argsexpr};
 EOF
 
+}
+
+
+while IFS=$'\r\n' read -r item; do
+    key=$(jq -nr '$item.key' --argjson item "$item")
+    version=$(jq -nr '$item.version' --argjson item "$item")
+    mkdir -p "index/$key"
+    echo
+    generate | tee "index/$key/$version.nix"
 done
 echo
 
