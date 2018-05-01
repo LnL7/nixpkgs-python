@@ -8,13 +8,19 @@ let
   cpython27 = interpreter.cpython27 // packages.cpython27;
   cpython36 = interpreter.cpython36 // packages.cpython36;
 
-  versionSet = import ./python-modules/pypi-versions.nix;
+  configurationCommon = import ./python-modules/configuration-common.nix;
+  versions = import ./python-modules/versions.nix;
 
-  pythonSet = python: import ./python-modules/pypi-packages.nix {
+  pypiPackages = python: import ./python-modules/pypi-packages.nix {
     callPackage = stdenv.lib.callPackageWith (pkgs // python);
     inherit (python) pythonPlatform;
     inherit pkgs;
   };
+
+  mkPackageSet = python:
+    makeExtensible
+      (extends configurationCommon
+        (extends versions (pypiPackages python)));
 in
 
 {
@@ -42,6 +48,6 @@ in
     };
   };
 
-  pythonng.packages.cpython27 = makeExtensible (extends versionSet (pythonSet cpython27));
-  pythonng.packages.cpython36 = makeExtensible (extends versionSet (pythonSet cpython36));
+  pythonng.packages.cpython27 = mkPackageSet cpython27;
+  pythonng.packages.cpython36 = mkPackageSet cpython36;
 }

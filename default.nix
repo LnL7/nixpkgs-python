@@ -5,4 +5,5 @@
 }:
 
 { inherit (pkgs) pythonng; }
+// pkgs.pythonng.interpreter."${interpreter}"
 // pkgs.pythonng.packages."${interpreter}"
