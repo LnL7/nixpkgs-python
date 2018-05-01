@@ -127,16 +127,12 @@ in
         runHook postInstall
       '';
 
-      fixupPhase = ''
-        runHook preFixup
-
+      postFixup = ''
         for f in $out/bin/*; do
             substituteInPlace $f \
                 --replace "#!${python}/bin/${pythonPlatform.python}" "#!${coreutils}/bin/env ${pythonPlatform.python}" \
                 --replace "import sys" "import sys; sys.path.append('$out/${pythonPlatform.sitePackages}')"
         done
-
-        runHook postFixup
       '';
 
       passthru.src = wheel;
