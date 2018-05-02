@@ -23,8 +23,8 @@ in
   };
 
   pythonng.packages.cpython36 = callPackage ./python-modules {
-    python = pkgs.python27;
-    virtualenv = pkgs.python27.pkgs.virtualenv;
+    python = pkgs.python36;
+    virtualenv = pkgs.python36.pkgs.virtualenv;
     pythonPlatform = mkPlatform "cp36" "3.6";
   };
 }
