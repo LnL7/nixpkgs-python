@@ -1,7 +1,7 @@
 { pkgs, buildEnv, mkShell, python, virtualenv, pythonPlatform, self }:
 
 { withPackages
-, extend ? (self: super: {})
+, overrides ? (self: super: {})
 , pythonDepends ? []
 , buildInputs ? []
 , installHook ? "", pipFlags ? ""
@@ -13,7 +13,7 @@ let
 
   env = buildEnv {
     name = "${python.name}-environment";
-    paths = pythonDepends ++ withPackages (self.extend extend);
+    paths = pythonDepends ++ withPackages (self.override { inherit overrides; });
   };
 in
 

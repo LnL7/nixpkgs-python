@@ -1,9 +1,18 @@
-{ pkgs, stdenv, callPackage
-, buildEnv, mkShell, runCommand, fetchurl, unzip
-, python, virtualenv, pythonPlatform, self
+{ pkgs, stdenv, buildEnv, mkShell, runCommand, fetchurl, unzip
+, python, virtualenv, pythonPlatform
+
+, overrides ? (self: super: {})
+, interpreterConfig ? (self: super: {})
+, versionConfig ? import ./versions.nix
+, configurationCommon ? import ./configuration-common.nix
+, initialPackages ? import ./pypi-packages.nix
 }:
 
 let
+  inherit (stdenv.lib) callPackageWith extends makeExtensible;
+
+  callPackage = callPackageWith (pkgs // self);
+
   wheelSrc = fetchurl {
     url = https://pypi.python.org/packages/py2.py3/w/wheel/wheel-0.29.0-py2.py3-none-any.whl;
     sha256 = "1g8f0p8kp1k6kaa3rpbq396401qa84rlsivm5xjlx005k7y3707a";
@@ -36,12 +45,23 @@ let
   mkShellEnv = callPackage ./make-virtualenv.nix {
     inherit python virtualenv pythonPlatform self;
   };
-in
 
-{
-  inherit python pip pythonPlatform mkPythonWheel mkPythonPackage mkShellEnv;
+  commonConfig = configurationCommon { inherit pkgs pythonPlatform callPackage; };
+  packageSet = initialPackages { inherit pkgs pythonPlatform callPackage; };
 
-  virtualenvWithPackages = withPackages: mkShellEnv {
-    inherit withPackages;
+  pythonPackages = self: packageSet self // {
+    inherit python pip pythonPlatform mkPythonWheel mkPythonPackage mkShellEnv;
+
+    virtualenvWithPackages = withPackages: mkShellEnv {
+      inherit withPackages;
+    };
   };
-}
+
+  self = makeExtensible
+    (extends overrides
+      (extends interpreterConfig
+        (extends commonConfig
+          (extends versionConfig pythonPackages))));
+
+in
+  self
