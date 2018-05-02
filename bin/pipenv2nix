@@ -3,5 +3,8 @@ set -e
 set -o pipefail
 
 freeze-requirements "$@" >/dev/null
-update-index "$@" -r requirements.txt | generate-packages
-update-index "$@" -r requirements.txt | generate-versions
+json=$(update-index "$@" -r requirements.txt)
+
+echo "$json" | generate-packages > python-modules/pypi-packages.nix
+echo
+echo "$json" | generate-versions

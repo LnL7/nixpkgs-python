@@ -2,7 +2,11 @@
 set -e
 
 
-generate() {
+while IFS=$'\r\n' read -r item; do
+
+key=$(jq -nr '$item.key' --argjson item "$item")
+version=$(jq -nr '$item.version' --argjson item "$item")
+if [ "$key" = null ]; then continue; fi
 
 pname=$(jq -nr '$item.name' --argjson item "$item")
 url=$(jq -nr '$item.srcs[0].url' --argjson item "$item")
@@ -31,7 +35,8 @@ drvexpr+="${pydeps:+
 
 argsexpr=
 
-cat <<-EOF
+mkdir -p "cache/$key"
+cat <<-EOF > "cache/$key/$version.nix"
   ${attribute} = callPackage
     ({ mkPythonPackage, fetchurl$inputexpr }:
      mkPythonPackage {
@@ -44,16 +49,25 @@ cat <<-EOF
      }) {$argsexpr};
 EOF
 
-}
-
-
-while IFS=$'\r\n' read -r item; do
-    key=$(jq -nr '$item.key' --argjson item "$item")
-    version=$(jq -nr '$item.version' --argjson item "$item")
-    mkdir -p "index/$key"
-    echo
-    generate | tee "index/$key/$version.nix"
 done
-echo
+
+cat <<-EOF
+{ pkgs, pythonPlatform, callPackage }:
+
+self:
+
+{
+EOF
+
+prefix=
+for f in cache/**/*.nix; do
+    echo -n "$prefix"
+    prefix=$'\n'
+    cat "$f"
+done
+
+cat <<-EOF
+}
+EOF
 
 # vim:set ft=sh:

@@ -2,25 +2,6 @@
 
 export PIPENV_CACHE_DIR=$HOME/.cache/pipenv
 
-declare -a args_a
-
-while [ $# -gt 0 ]; do
-  case $1 in
-    --python)
-      args_a+=("$1" "$2")
-      case $2 in
-        2.*)
-          args_a+=("--two");;
-        3.*)
-          args_a+=("--three");;
-      esac
-      shift;;
-    *)
-      args_a+=("$1");;
-  esac
-  shift
-done
-
 pipenv lock "$@" -r | tee requirements.txt
 
 cat <<-EOF | tee -a requirements.txt
