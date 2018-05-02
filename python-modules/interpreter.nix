@@ -5,7 +5,7 @@
 let
   inherit (interpreter) pip mkPythonWheel;
 
-  isZip = builtins.any (stdenv.lib.hasSuffix ".zip");
+  isZip = src: builtins.any (stdenv.lib.hasSuffix ".zip") (src.urls or [src]);
 
   defaultPipFlags = [ "--isolated" "--no-cache-dir" "--disable-pip-version-check" ];
 
@@ -46,7 +46,7 @@ in
     stdenv.mkDerivation (attr // {
       inherit name pipFlags;
 
-      nativeBuildInputs = stdenv.lib.optional (isZip src.urls) unzip
+      nativeBuildInputs = stdenv.lib.optional (isZip src) unzip
         ++ nativeBuildInputs;
       buildInputs = [ python pip ] ++ buildInputs;
       propagatedBuildInputs = systemDepends ++ pythonDepends ++ propagatedBuildInputs;
