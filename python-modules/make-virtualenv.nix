@@ -1,6 +1,4 @@
-{ buildEnv, mkShell, python, virtualenv
-, interpreter, packages, pythonPlatform
-}:
+{ pkgs, buildEnv, mkShell, python, virtualenv, pythonPlatform, self }:
 
 { withPackages
 , extend ? (self: super: {})
@@ -15,7 +13,7 @@ let
 
   env = buildEnv {
     name = "${python.name}-environment";
-    paths = pythonDepends ++ withPackages (packages.extend extend);
+    paths = pythonDepends ++ withPackages (self.extend extend);
   };
 in
 

@@ -28,9 +28,6 @@ in
     python = pkgs.python27;
     virtualenv = pkgs.python27.pkgs.virtualenv;
 
-    interpreter = interpreter.cpython27;
-    packages = packages.cpython27;
-
     pythonPlatform = rec {
       abi = "cp27";
       version = "2.7";
@@ -38,14 +35,13 @@ in
       python = "python${version}";
       sitePackages = "lib/${python}/site-packages";
     };
+
+    self = packages.cpython27;
   };
 
   pythonng.interpreter.cpython36 = callPackages ./python-modules/interpreter.nix {
     python = pkgs.python36;
     virtualenv = pkgs.python36.pkgs.virtualenv;
-
-    interpreter = interpreter.cpython36;
-    packages = packages.cpython36;
 
     pythonPlatform = rec {
       abi = "cp36";
@@ -54,6 +50,8 @@ in
       python = "python${version}";
       sitePackages = "lib/${python}/site-packages";
     };
+
+    self = packages.cpython36;
   };
 
   pythonng.packages.cpython27 = mkPackageSet (interpreter.cpython27 // packages.cpython27);
