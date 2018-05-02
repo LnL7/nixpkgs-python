@@ -51,6 +51,8 @@ in
       buildInputs = [ python pip ] ++ buildInputs;
       propagatedBuildInputs = systemDepends ++ pythonDepends ++ propagatedBuildInputs;
 
+      SOURCE_DATE_EPOCH = "315532800";
+
       buildPhase = ''
         runHook preBuild
 
