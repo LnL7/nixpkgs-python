@@ -14,7 +14,8 @@ if __name__ == '__main__':
                         help='package requirement specifiers')
     parser.add_argument('-r', '--requirement', metavar='file', type=str, nargs='*',
                         help='requirements file')
-    parser.add_argument('-V', '--python', type=str, default='3.6',
+    python_version = '{}.{}'.format(sys.version_info.major, sys.version_info.minor)
+    parser.add_argument('-V', '--python', type=str, default=python_version,
                         help='Python version to resolve dependencies for.')
     parser.add_argument('--no-cache', action='store_true', default=False,
                         help='Disable the cache')
