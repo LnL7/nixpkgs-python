@@ -1,7 +1,7 @@
-{ pkgs ? import <nixpkgs> {
+{ interpreter ? builtins.readFile ./python-version
+, pkgs ? import <nixpkgs> {
     overlays = [ (import ./pythonng-overlay.nix) ];
   }
-, interpreter ? "cpython36"
 }:
 
 { inherit (pkgs) pythonng; }
