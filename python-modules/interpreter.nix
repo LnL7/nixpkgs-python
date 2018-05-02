@@ -1,9 +1,10 @@
-{ stdenv, config, buildEnv, runCommand, fetchurl, python, virtualenv, coreutils, unzip
+{ stdenv, config, buildEnv, mkShell, runCommand, fetchurl
+, python, virtualenv, coreutils, unzip
 , interpreter, packages, pythonPlatform
 }:
 
 let
-  inherit (interpreter) pip mkPythonWheel;
+  inherit (interpreter) pip mkPythonWheel mkShellEnv;
 
   isZip = src: builtins.any (stdenv.lib.hasSuffix ".zip") (src.urls or [src]);
 
@@ -144,7 +145,9 @@ in
       };
     };
 
-  virtualenvWith = import ./virtualenv-with.nix {
-    inherit stdenv buildEnv python virtualenv interpreter packages pythonPlatform;
+  mkShellEnv = import ./make-virtualenv.nix {
+    inherit buildEnv mkShell python virtualenv interpreter packages pythonPlatform;
   };
+
+  virtualenvWithPackages = withPackages: mkShellEnv { inherit withPackages; };
 }

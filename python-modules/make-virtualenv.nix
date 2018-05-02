@@ -1,29 +1,28 @@
-{ stdenv, buildEnv, python, virtualenv
+{ buildEnv, mkShell, python, virtualenv
 , interpreter, packages, pythonPlatform
 }:
 
-{ extend ? (self: super: {})
+{ withPackages
+, extend ? (self: super: {})
 , pythonDepends ? []
 , buildInputs ? []
 , installHook ? "", pipFlags ? ""
 , shellHook ? ""
 }:
 
-pythonFun:
-
 let
-  inherit (stdenv.lib) concatStringsSep;
   inherit (python) sitePackages;
 
   env = buildEnv {
     name = "${python.name}-environment";
-    paths = pythonDepends ++ pythonFun (packages.extend extend);
+    paths = pythonDepends ++ withPackages (packages.extend extend);
   };
 in
 
-stdenv.mkDerivation {
-  name = "${python.name}-user-environment";
+mkShell {
+  name = "${python.name}-shell-environment";
   inherit pipFlags;
+
   buildInputs = [ env ] ++ buildInputs;
 
   shellHook = ''
