@@ -50,7 +50,8 @@ let
   packageSet = initialPackages { inherit pkgs pythonPlatform callPackage; };
 
   pythonPackages = self: packageSet self // {
-    inherit python pip pythonPlatform mkPythonWheel mkPythonPackage mkShellEnv;
+    inherit pythonPlatform mkPythonWheel mkPythonPackage mkShellEnv;
+    python = python // { mkDerivation = mkPythonPackage; };
 
     virtualenvWithPackages = withPackages: mkShellEnv {
       inherit withPackages;
