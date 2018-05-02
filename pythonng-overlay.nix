@@ -9,6 +9,13 @@ let
   versions = import ./python-modules/versions.nix;
   pypiPackages = import ./python-modules/pypi-packages.nix;
 
+  mkPlatform = abi: version: rec {
+    inherit abi version;
+    pip = "pip${version}";
+    python = "python${version}";
+    sitePackages = "lib/${python}/site-packages";
+  };
+
   mkPackageSet = python:
     let
       args = {
@@ -27,30 +34,14 @@ in
   pythonng.interpreter.cpython27 = callPackages ./python-modules/interpreter.nix {
     python = pkgs.python27;
     virtualenv = pkgs.python27.pkgs.virtualenv;
-
-    pythonPlatform = rec {
-      abi = "cp27";
-      version = "2.7";
-      pip = "pip${version}";
-      python = "python${version}";
-      sitePackages = "lib/${python}/site-packages";
-    };
-
+    pythonPlatform = mkPlatform "cp27" "2.7";
     self = packages.cpython27;
   };
 
   pythonng.interpreter.cpython36 = callPackages ./python-modules/interpreter.nix {
     python = pkgs.python36;
     virtualenv = pkgs.python36.pkgs.virtualenv;
-
-    pythonPlatform = rec {
-      abi = "cp36";
-      version = "3.6";
-      pip = "pip${version}";
-      python = "python${version}";
-      sitePackages = "lib/${python}/site-packages";
-    };
-
+    pythonPlatform = mkPlatform "cp36" "3.6";
     self = packages.cpython36;
   };
 
