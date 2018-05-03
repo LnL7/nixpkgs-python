@@ -1,5 +1,5 @@
 { pkgs, stdenv, buildEnv, mkShell, runCommand, fetchurl, unzip
-, python, virtualenv, pythonPlatform
+, python, virtualenv, pythonPlatform, self
 
 , overrides ? (self: super: {})
 , interpreterConfig ? (self: super: {})
@@ -47,9 +47,9 @@ let
   };
 
   commonConfig = configurationCommon { inherit pkgs pythonPlatform callPackage; };
-  packageSet = initialPackages { inherit pkgs pythonPlatform callPackage; };
+  initialSet = initialPackages { inherit pkgs pythonPlatform callPackage; };
 
-  pythonPackages = self: packageSet self // {
+  packageSet = self: initialSet self // {
     inherit pythonPlatform mkPythonWheel mkPythonPackage mkShellEnv;
     python = python // { mkDerivation = mkPythonPackage; };
 
@@ -58,11 +58,11 @@ let
     };
   };
 
-  self = makeExtensible
+  pythonPackages = makeExtensible
     (extends overrides
       (extends interpreterConfig
         (extends commonConfig
-          (extends versionConfig pythonPackages))));
+          (extends versionConfig packageSet))));
 
 in
-  self
+  pythonPackages
