@@ -62,7 +62,7 @@ stdenv.mkDerivation {
     done
   '';
 
-  passthru.src = wheel;
+  passthru = { inherit src; };
 
   meta = with stdenv.lib; {
     meta.platforms = platforms.all;
