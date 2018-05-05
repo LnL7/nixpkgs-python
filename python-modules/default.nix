@@ -21,12 +21,19 @@ let
   pip = runCommand "python${pythonPlatform.version}-pip"
     { nativeBuildInputs = [ unzip ]; buildInputs = [ python ]; }
     ''
-      mkdir $out
-      ln -s $out .local
-      export HOME=$(pwd)
-      ${pythonPlatform.python} -m ensurepip --user
+      mkdir dist
+      ln -s ${wheelSrc} dist/wheel-0.29.0-py2.py3-none-any.whl
 
-      unzip -d $out/${pythonPlatform.sitePackages} ${wheelSrc}
+      prefix=$(pwd)/.local
+
+      export HOME=$(pwd)
+      export PATH=$prefix/bin:$PATH
+      export PYTHONPATH=$prefix/${pythonPlatform.sitePackages}
+
+      ${pythonPlatform.python} -m ensurepip --user
+      ${pythonPlatform.pip} install wheel==0.29.0 --no-index --find-links ./dist --prefix $prefix
+
+      cp -r $prefix $out
 
       for f in $out/bin/*; do
           substituteInPlace $f \
