@@ -1,4 +1,4 @@
-{ pkgs, stdenv, buildEnv, mkShell, runCommand, fetchurl, unzip
+{ pkgs, stdenv, buildEnv, mkShell, runCommand, fetchurl
 , python, virtualenv, pythonPlatform, self
 
 , overrides ? (self: super: {})
@@ -19,7 +19,7 @@ let
   };
 
   pip = runCommand "python${pythonPlatform.version}-pip"
-    { nativeBuildInputs = [ unzip ]; buildInputs = [ python ]; }
+    { buildInputs = [ python ]; }
     ''
       mkdir dist
       ln -s ${wheelSrc} dist/wheel-0.29.0-py2.py3-none-any.whl
