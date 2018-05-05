@@ -1,17 +1,20 @@
 { pkgs, stdenv, coreutils, python, pip, pythonPlatform, mkPythonWheel }:
 
 { pname, version, src ? null
+, info ? wheel.info
 , wheel ? mkPythonWheel (builtins.removeAttrs attr ["wheel"])
 , name ? "python${pythonPlatform.version}-${pname}-${version}"
-, pipFlags ? [ "--ignore-installed" "--isolated" "--no-cache-dir" "--disable-pip-version-check" ]
+, pipFlags ? [ "--ignore-installed" ]
 , systemDepends ? [], pythonDepends ? []
 , buildInputs ? [], propagatedBuildInputs ? []
 , ... }@attr:
 
 stdenv.mkDerivation {
-  inherit name pname version wheel pipFlags;
+  inherit name pname version wheel;
   inherit systemDepends pythonDepends;
   src = wheel;
+
+  pipFlags = [ "--isolated" "--no-cache-dir" "--no-deps" "--no-index" ] ++ pipFlags;
 
   buildInputs = [ pip ] ++ buildInputs;
   propagatedBuildInputs = [ python ] ++ systemDepends ++ pythonDepends ++ propagatedBuildInputs;
@@ -28,7 +31,7 @@ stdenv.mkDerivation {
     # This option is only relevant when the sandbox is disabled.
     export PYTHONNOUSERSITE=1;
 
-    ${pythonPlatform.pip} install '${pname}==${version}' $pipFlags --no-deps --no-index --find-links ./dist --prefix $out
+    ${pythonPlatform.pip} install '${pname}==${version}' $pipFlags --find-links ./dist --prefix $out
 
     for dep in $pythonDepends; do
         for f in $dep/${pythonPlatform.sitePackages}/*; do
@@ -62,7 +65,7 @@ stdenv.mkDerivation {
     done
   '';
 
-  passthru = { inherit src; };
+  passthru = { inherit info src pip; };
 
   meta = with stdenv.lib; {
     meta.platforms = platforms.all;

@@ -46,7 +46,7 @@ let
   };
 
   mkPythonWheel = callPackage ./make-wheel.nix {
-    inherit python pip pythonPlatform;
+    inherit python pip pythonPlatform mkPythonInfo;
   };
 
   mkPythonPackage = callPackage ./make-package.nix {
