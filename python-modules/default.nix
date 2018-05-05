@@ -41,6 +41,10 @@ let
       done
     '';
 
+  mkPythonDistInfo = callPackage ./make-distinfo.nix {
+    inherit python pip pythonPlatform;
+  };
+
   mkPythonWheel = callPackage ./make-wheel.nix {
     inherit python pip pythonPlatform;
   };
