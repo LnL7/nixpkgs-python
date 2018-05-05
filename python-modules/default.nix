@@ -41,7 +41,7 @@ let
       done
     '';
 
-  mkPythonDistInfo = callPackage ./make-distinfo.nix {
+  mkPythonInfo = callPackage ./make-info.nix {
     inherit python pip pythonPlatform;
   };
 
@@ -61,7 +61,7 @@ let
   initialSet = initialPackages { inherit pkgs pythonPlatform callPackage; };
 
   packageSet = self: initialSet self // {
-    inherit pythonPlatform mkPythonWheel mkPythonPackage mkShellEnv;
+    inherit pythonPlatform mkPythonInfo mkPythonWheel mkPythonPackage mkShellEnv;
     python = python // { mkDerivation = mkPythonPackage; };
 
     virtualenvWithPackages = withPackages: mkShellEnv {

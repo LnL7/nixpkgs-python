@@ -5,7 +5,8 @@ let
 in
 
 { pname, version, src
-, name ? "${pname}-${version}.dist-info"
+, type ? "dist"
+, name ? "${pname}-${version}.${type}-info"
 , buildInputs ? [], nativeBuildInputs ? []
 , ...
 }@attr:
@@ -22,7 +23,7 @@ stdenv.mkDerivation (attr // {
   buildPhase = ''
     runHook preBuild
 
-    ${pythonPlatform.python} ${./nix_setup.py} dist_info --egg-base .
+    ${pythonPlatform.python} ${./nix_setup.py} ${type}_info --egg-base .
 
     runHook postBuild
   '';
@@ -30,7 +31,7 @@ stdenv.mkDerivation (attr // {
   installPhase = ''
     runHook preInstall
 
-    cp -r ${pname}.dist-info $out
+    cp -r ${pname}.${type}-info $out
 
     runHook postInstall
   '';
