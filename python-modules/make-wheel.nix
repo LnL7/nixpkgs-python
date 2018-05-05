@@ -15,7 +15,7 @@ in
 }@attr:
 
 stdenv.mkDerivation (attr // {
-  inherit name;
+  inherit name systemDepends pythonDepends;
   pipFlags = [ "--isolated" "--no-cache-dir" "--no-deps" "--no-index" ] ++ pipFlags;
 
   nativeBuildInputs = stdenv.lib.optional (isZip src) unzip
