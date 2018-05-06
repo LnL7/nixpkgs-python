@@ -31,12 +31,14 @@ let
     then callPackage f (attr // fakeCallPackage f attr)
     else callPackage f attr;
 
-  toJSON = attr: builtins.toJSON (stdenv.lib.filterAttrs (n: v: !isFunction v) attr);
+  toValue = attr: stdenv.lib.filterAttrs (n: v: !isFunction v && !isDerivation v) attr;
 
 in
-  toJSON (self.override {
+  toValue (self.override {
     configurationCommon = _: self: super: {};
     interpreterConfig = self: super: {};
     versionConfig = self: super: {};
     pythonCallPackage = f: attr: builtins.removeAttrs (pythonCallPackage f attr) ["override" "overrideDerivation"];
+    pythonPlatform = fakePythonPlatform;
+    stdenv = fakeStdenv;
   })

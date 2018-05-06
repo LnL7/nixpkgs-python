@@ -36,7 +36,8 @@ in
     self = pythonng.packages.cpython36;
   };
 
-  pythonng.jsonIndex = callPackage ./python-modules/json-index.nix {
-   self = pythonng.packages.cpython36;
+  pythonng.index = import ./python-modules/index.nix {
+    inherit stdenv callPackage;
+    self = pythonng.packages.cpython36;
   };
 }
