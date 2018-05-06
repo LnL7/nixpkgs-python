@@ -1,0 +1,224 @@
+#!/usr/bin/env nix-shell
+#!nix-shell -i python3.6 -p "python36.withPackages (py: with py; [ pip ])"
+import argparse
+import json
+import os
+import subprocess
+import sys
+
+from pip._vendor.distlib.compat import quote
+from pip._vendor.distlib.locators import SimpleScrapingLocator, \
+    normalize_name, parse_requirement
+from pip._vendor.distlib.markers import interpret
+from pip._vendor.distlib.metadata import Metadata
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Nix Python Package Generator.')
+    parser.add_argument('package_spec', type=str, nargs='*',
+                        default=list(),
+                        help='package requirement specifiers')
+    parser.add_argument('-i', '--index-url', type=str,
+                        default='https://pypi.org/simple',
+                        help='URL of simple python package index')
+    parser.add_argument('-S', '--system-depends', type=str, action='append', default=list(),
+                        help='Extra system dependencies')
+    parser.add_argument('-P', '--python-depends', type=str, action='append', default=list(),
+                        help='Extra python dependencies')
+    parser.add_argument('--print-json', action='store_true', default=False,
+                        help='Print package information')
+    parser.add_argument('--print-cache', action='store_true', default=False,
+                        help='Print cached package information')
+    parser.add_argument('--no-cache', action='store_true', default=False,
+                        help='Disable the cache')
+    parser.add_argument('--no-dist-info', action='store_true', default=False,
+                        help='Disable dist-info build, this skips dependencies and metadata')
+
+    args = parser.parse_args()
+else:
+    args = None
+
+
+loc = SimpleScrapingLocator(args.index_url, scheme='legacy')
+
+
+def from_environment(marker):
+    checks = []
+    darwin = interpret(marker, {'sys_platform': 'darwin'})
+    linux = interpret(marker, {'sys_platform': 'linux'})
+    python27 = interpret(marker, {'python_version': '2.7'})
+    python36 = interpret(marker, {'python_version': '3.6'})
+
+    if all(not x for x in [darwin, linux]) and all(not x for x in [python27, python36]):
+        return False
+    if all(x for x in [darwin, linux]) and all(x for x in [python27, python36]):
+        return True
+
+    if darwin:
+        return 'stdenv.isDarwin'
+    if linux:
+        return 'stdenv.isLinux'
+    if python27:
+        return 'pythonPlatform.isPython27'
+    if python36:
+        return 'pythonPlatform.isPython36'
+    return True
+
+
+def from_license(license):
+    if 'Apache License' in license:
+        return 'asl20'
+    if 'BSD' in license:
+        return 'bsd3'
+    if 'MIT' in license:
+        return 'mit'
+    return None
+
+
+if not args.no_cache:
+    output = subprocess.check_output(['nix-instantiate', '--eval', '--strict', '--json', '-A', 'pythonng.index'])
+    cache = json.loads(output)
+else:
+    cache = {}
+
+
+for spec in args.package_spec:
+    req = parse_requirement(spec)
+    key = normalize_name(req.name)
+
+    if args.print_cache:
+        pkg_cache = cache.get(spec.replace('==', '_').replace('.', '_'))
+        if pkg_cache:
+            pkg = {'key': key}
+            pkg.update(pkg_cache)
+            print(json.dumps(pkg))
+            exit(0)
+        else:
+            exit(1)
+
+    dist = loc.locate(req.requirement)
+    pkg = {'key': key, 'pname': dist.name, 'version': dist.version}
+    url, (digest_algo, digest) = next((k, v) for k, v in dist.digests.items() if not k.endswith('.whl'))
+    src = {'url': url, digest_algo: digest}
+    pkg['src'] = src
+
+    pkg_cache = cache.get('%s_%s' % (key, dist.version.replace('.', '_')))
+    if pkg_cache and digest == pkg_cache['src'][digest_algo]:
+        pkg_cache.pop('src')
+        pkg.update(pkg_cache)
+    else:
+        pkg_cache = None
+
+    python_conditional_deps = []
+    system_deps = pkg.get('systemDepends', [])
+    python_deps = pkg.get('pythonDepends', [])
+    meta = pkg.get('meta', {})
+
+    if not args.no_dist_info and not pkg_cache:
+        data = {}
+        data.update(pkg)
+        data.update(src)
+        expr = """
+          with import ./. {};
+
+          callPackage
+            ({ mkPythonInfo, fetchurl }:
+             mkPythonInfo {
+               pname = "%(pname)s";
+               version = "%(version)s";
+               src = fetchurl {
+                 url = "%(url)s";
+                 sha256 = "%(sha256)s";
+               };
+            }) {}
+        """ % data
+
+        output = subprocess.check_output(['nix-build', '-E', '-', '--no-out-link'], input=expr.encode())
+        dist_info = output.decode().strip()
+        print(dist_info, file=sys.stderr)
+
+        meta = Metadata("%s/metadata.json" % dist_info)
+
+        run_requires = meta.dependencies.get('run_requires', [])
+        # print(json.dumps(run_requires), file=sys.stderr)
+        for item in (x for x in run_requires if x.get('extra') is None):
+            env = item.get('environment')
+            reqs = item.get('requires')
+            deps = [normalize_name(parse_requirement(x).name) for x in reqs]
+            expr = from_environment(env) if env else True
+            if expr is False:
+                print('warning: skipping environment %s' % env, file=sys.stderr)
+            elif expr is True:
+                python_deps.extend(deps)
+            else:
+                if len(deps) == 1:
+                    python_deps.append({'expr': expr, 'optional': deps[0]})
+                else:
+                    python_deps.append({'expr': expr, 'optionals': deps})
+                python_conditional_deps.extend(deps)
+
+        homepage = meta.dictionary.get('extensions', {}).get('python.details', {}).get('project_urls', {}).get('Home')
+        meta = {'description': meta.summary, 'homepage': homepage, 'license': from_license(meta.license or '')}
+
+    pkg['systemDepends'] = system_deps + args.system_depends
+    python_deps = [x for x in python_deps if x not in python_conditional_deps]
+    pkg['pythonDepends'] = python_deps + args.python_depends
+    pkg['meta'] = meta
+
+    if args.print_json:
+        print(json.dumps(pkg))
+        exit(0)
+
+    attr = '%s_%s' % (key, dist.version.replace('.', '_'))
+    inputs = ['mkPythonPackage', 'stdenv', 'fetchurl'] + pkg['systemDepends']
+    system_expr = '[ %s ]' % ' '.join(pkg['systemDepends'])
+    python_expr = '[ %s ]' % ' '.join([x for x in pkg['pythonDepends'] if isinstance(x, str)])
+    for dep in pkg['pythonDepends']:
+        if isinstance(dep, str):
+            inputs.append(dep)
+        elif 'optional' in dep:
+            inputs.extend(dep['optional'])
+            python_expr += "\n         ++ stdenv.lib.optional %s %s" % (dep['expr'], dep['optional'])
+        elif 'optionals' in dep:
+            inputs.extend(dep['optionals'])
+            python_expr += "\n         ++ stdenv.lib.optionals %s [ %s ]" % (dep['expr'], ' '.join(dep['optionals']))
+
+    inputs_expr = ', '.join(inputs)
+
+    depends_expr = ''
+    if pkg['systemDepends']:
+        depends_expr += '\n       systemDepends = %s;' % system_expr
+    if pkg['pythonDepends']:
+        depends_expr += '\n       pythonDepends = %s;' % python_expr
+
+    meta_expr = ''
+    if meta.get('description'):
+        meta_expr += '\n         description = "%s";' % meta['description']
+    if meta.get('homepage'):
+        meta_expr += '\n         homepage = "%s";' % meta['homepage']
+    if meta.get('license'):
+        meta_expr += '\n         license = licenses.%s;' % meta['license']
+
+    data = {'attr': attr, 'inputs_expr': inputs_expr, 'depends_expr': depends_expr, 'meta_expr': meta_expr}
+    data.update(pkg)
+    data.update(src)
+    data.update(meta)
+
+    expr = """
+  %(attr)s = callPackage
+    ({ %(inputs_expr)s }:
+     mkPythonPackage {
+       pname = "%(pname)s";
+       version = "%(version)s";
+       src = fetchurl {
+         url = "%(url)s";
+         sha256 = "%(sha256)s";
+       };%(depends_expr)s
+       meta = with stdenv.lib; {%(meta_expr)s
+       };
+     }) {};
+  """ % data
+    print(expr)
+
+
+# vim:set ft=python:
