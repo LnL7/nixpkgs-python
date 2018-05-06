@@ -186,9 +186,11 @@ for spec in args.package_spec:
             homepage = meta.dictionary.get('extensions', {}).get('python.details', {}).get('project_urls', {}).get('Home')
             meta = {'description': meta.summary, 'homepage': homepage, 'license': from_license(meta.license or '')}
 
-    pkg['systemDepends'] = system_deps + args.system_depends
+    system_deps += [x for x in args.system_depends if x not in system_deps]
+    pkg['systemDepends'] = system_deps
+    python_deps += [x for x in args.python_depends if x not in python_deps]
     python_deps = [x for x in python_deps if x not in python_conditional_deps]
-    pkg['pythonDepends'] = python_deps + args.python_depends
+    pkg['pythonDepends'] = python_deps
     pkg['meta'] = meta
 
     if args.print_json:
