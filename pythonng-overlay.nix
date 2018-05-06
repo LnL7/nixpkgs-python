@@ -33,4 +33,8 @@ in
 
     self = pythonng.packages.cpython36;
   };
+
+  pythonng.jsonIndex = callPackage ./python-modules/json-index.nix {
+   self = pythonng.packages.cpython36;
+  };
 }
