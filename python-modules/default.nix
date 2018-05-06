@@ -1,6 +1,6 @@
 { pkgs, stdenv, buildEnv, mkShell, runCommand, fetchurl
 , python, virtualenv, pythonPlatform, self
-
+, pythonCallPackage ? stdenv.lib.callPackageWith (pkgs // self)
 , overrides ? (self: super: {})
 , interpreterConfig ? (self: super: {})
 , versionConfig ? import ./versions.nix
@@ -9,9 +9,8 @@
 }:
 
 let
-  inherit (stdenv.lib) callPackageWith extends makeExtensible;
-
-  callPackage = callPackageWith (pkgs // self);
+  inherit (stdenv.lib) extends makeExtensible;
+  callPackage = pythonCallPackage;
 
   wheelSrc = fetchurl {
     url = https://pypi.python.org/packages/py2.py3/w/wheel/wheel-0.29.0-py2.py3-none-any.whl;
@@ -61,7 +60,7 @@ let
   initialSet = initialPackages { inherit pkgs pythonPlatform callPackage; };
 
   packageSet = self: initialSet self // {
-    inherit pythonPlatform mkPythonInfo mkPythonWheel mkPythonPackage mkShellEnv;
+    inherit pythonPlatform callPackage mkPythonInfo mkPythonWheel mkPythonPackage mkShellEnv;
     python = python // { mkDerivation = mkPythonPackage; };
 
     virtualenvWithPackages = withPackages: mkShellEnv {
