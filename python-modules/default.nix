@@ -1,6 +1,6 @@
 { pkgs, stdenv, buildEnv, mkShell, runCommand, fetchurl
 , python, virtualenv, pythonPlatform, self
-, pythonCallPackage ? stdenv.lib.callPackageWith (pkgs // self)
+, pythonCallPackage ? stdenv.lib.callPackageWith (pkgs // { inherit self; } // self)
 , overrides ? (self: super: {})
 , interpreterConfig ? (self: super: {})
 , versionConfig ? import ./versions.nix
@@ -53,7 +53,7 @@ let
   };
 
   mkShellEnv = callPackage ./make-virtualenv.nix {
-    inherit python virtualenv pythonPlatform self;
+    inherit python virtualenv pythonPlatform;
   };
 
   commonConfig = configurationCommon { inherit pkgs pythonPlatform callPackage; };
