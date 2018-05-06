@@ -31,6 +31,8 @@ if __name__ == '__main__':
                         help='Print cached package information')
     parser.add_argument('--no-cache', action='store_true', default=False,
                         help='Disable the cache')
+    parser.add_argument('--no-overrides', action='store_true', default=False,
+                        help='Disable package overrides')
     parser.add_argument('--no-dist-info', action='store_true', default=False,
                         help='Disable dist-info build, this skips dependencies and metadata')
 
@@ -101,6 +103,13 @@ for spec in args.package_spec:
     url, (digest_algo, digest) = next((k, v) for k, v in dist.digests.items() if not k.endswith('.whl'))
     src = {'url': url, digest_algo: digest}
     pkg['src'] = src
+
+    if not args.no_overrides:
+        path = 'index/%s/overrides.json' % key
+        if os.path.exists(path):
+            with open(path, 'r') as fd:
+                data = json.load(fd)
+                pkg.update(data)
 
     pkg_cache = cache.get('%s_%s' % (key, dist.version.replace('.', '_')))
     if pkg_cache and digest == pkg_cache['src'][digest_algo]:
