@@ -12,6 +12,11 @@ let
   inherit (stdenv.lib) extends makeExtensible;
   callPackage = pythonCallPackage;
 
+  pbrSrc = fetchurl {
+    url = https://files.pythonhosted.org/packages/e1/ba/f95e3ec83f93919b1437028e989cf3fa5ff4f5cae4a1f62255f71deddb5b/pbr-4.0.2-py2.py3-none-any.whl;
+    sha256 = "4e8a0ed6a8705a26768f4c3da26026013b157821fe5f95881599556ea9d91c19";
+  };
+
   wheelSrc = fetchurl {
     url = https://pypi.python.org/packages/py2.py3/w/wheel/wheel-0.29.0-py2.py3-none-any.whl;
     sha256 = "1g8f0p8kp1k6kaa3rpbq396401qa84rlsivm5xjlx005k7y3707a";
@@ -21,6 +26,7 @@ let
     { buildInputs = [ python ]; }
     ''
       mkdir dist
+      ln -s ${pbrSrc} dist/pbr-4.0.2-py2.py3-none-any.whl
       ln -s ${wheelSrc} dist/wheel-0.29.0-py2.py3-none-any.whl
 
       prefix=$(pwd)/.local
@@ -31,6 +37,7 @@ let
 
       ${pythonPlatform.python} -m ensurepip --user
       ${pythonPlatform.pip} install wheel==0.29.0 --no-index --find-links ./dist --prefix $prefix
+      ${pythonPlatform.pip} install pbr==4.0.2 --no-index --find-links ./dist --prefix $prefix
 
       cp -r $prefix $out
 
