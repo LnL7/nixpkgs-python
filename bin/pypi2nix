@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -e
+
+nix-instantiate --eval --strict --json -A pythonng.index \
+  | jq -r '.[] | select(.pname) | [.pname, .version] | join("==")' \
+  > pypi-requirements.txt
+
+pip2nix --no-print-expr -r pypi-requirements.txt "$@"
+
+cat <<-EOF > pypi-packages.nix
+{ pkgs, callPackage }:
+
+self:
+
+{$(find cache -name '*.nix' -exec cat {} +)
+}
+EOF

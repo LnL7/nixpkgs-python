@@ -27,6 +27,8 @@ if __name__ == '__main__':
                         help='Extra system dependencies')
     parser.add_argument('-P', '--python-depends', type=str, action='append', default=list(),
                         help='Extra python dependencies')
+    parser.add_argument('--no-print-expr', action='store_true', default=False,
+                        help='Don\'t print generated expressions')
     parser.add_argument('--print-json', action='store_true', default=False,
                         help='Print package information')
     parser.add_argument('--print-cache', action='store_true', default=False,
@@ -95,8 +97,14 @@ for path in args.requirement:
 
 
 for spec in args.package_spec:
-    spec, _, _ = spec.partition(';')
+    spec, _, _ = spec.strip().partition(';')
+    if not spec:
+        continue
+
     req = parse_requirement(spec)
+    if not req:
+        print('error: invalid requirement \'%s\'' % spec)
+        exit(1)
     key = normalize_name(req.name)
 
     if args.print_cache:
@@ -245,7 +253,12 @@ for spec in args.package_spec:
        meta = with stdenv.lib; {%(meta_expr)s
        };
      }) {};""" % data
-    print(expr)
+
+    if not args.no_print_expr:
+        print(expr)
+    os.makedirs('cache/%s' % key, exist_ok=True)
+    with open('cache/%s/%s.nix' % (key, dist.version), 'w') as fd:
+        fd.write(expr)
 
 
 # vim:set ft=python:
