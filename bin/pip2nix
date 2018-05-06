@@ -179,7 +179,7 @@ for spec in args.package_spec:
         exit(0)
 
     attr = '%s_%s' % (key, dist.version.replace('.', '_'))
-    inputs = ['mkPythonPackage', 'stdenv', 'fetchurl'] + pkg['systemDepends']
+    inputs = ['mkPythonPackage', 'pythonPlatform', 'stdenv', 'fetchurl'] + pkg['systemDepends']
     system_expr = '[ %s ]' % ' '.join(pkg['systemDepends'])
     python_expr = '[ %s ]' % ' '.join([x for x in pkg['pythonDepends'] if isinstance(x, str)])
     for dep in pkg['pythonDepends']:
@@ -225,8 +225,7 @@ for spec in args.package_spec:
        };%(depends_expr)s
        meta = with stdenv.lib; {%(meta_expr)s
        };
-     }) {};
-  """ % data
+     }) {};""" % data
     print(expr)
 
 
