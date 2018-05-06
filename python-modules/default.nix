@@ -56,8 +56,8 @@ let
     inherit python virtualenv pythonPlatform;
   };
 
-  commonConfig = configurationCommon { inherit pkgs pythonPlatform callPackage; };
-  initialSet = initialPackages { inherit pkgs pythonPlatform callPackage; };
+  commonConfig = configurationCommon { inherit pkgs callPackage; };
+  initialSet = initialPackages { inherit pkgs callPackage; };
 
   packageSet = self: initialSet self // {
     inherit pythonPlatform callPackage mkPythonInfo mkPythonWheel mkPythonPackage mkShellEnv;
