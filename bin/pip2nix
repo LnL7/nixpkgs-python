@@ -72,7 +72,7 @@ def from_environment(marker):
 
 
 def from_license(license):
-    if 'Apache License' in license:
+    if 'Apache' in license:
         return 'asl20'
     if 'BSD' in license:
         return 'bsd3'
@@ -84,7 +84,7 @@ def from_license(license):
         return 'mit'
     if 'MPL-2.0' in license:
         return 'mpl20'
-    if 'Python Software Foundation License' in license:
+    if 'PSF' in license or 'Python Software Foundation License' in license:
         return 'psfl'
     print('warning: unknown license %s' % license)
     return None
@@ -124,7 +124,7 @@ for spec in args.package_spec:
             exit(1)
 
     dist = loc.locate(req.requirement)
-    pkg = {'key': key, 'pname': dist.name, 'version': dist.version}
+    pkg = {'key': key, 'pname': dist.name.replace('-', '_'), 'version': dist.version}
     url, (digest_algo, digest) = next((k, v) for k, v in dist.digests.items() if not k.endswith('.whl'))
     src = {'url': url, digest_algo: digest}
     pkg['src'] = src
@@ -137,10 +137,13 @@ for spec in args.package_spec:
                 pkg.update(data)
 
     pkg_cache = cache.get('%s_%s' % (key, dist.version.replace('.', '_')))
-    if pkg_cache and digest == pkg_cache['src'][digest_algo]:
-        pkg_cache.pop('src')
-        pkg.update(pkg_cache)
+    if pkg_cache and digest == pkg_cache.get('src', {}).get(digest_algo, {}):
+        pkg_cache.update(pkg)
+        pkg = pkg_cache
     else:
+        if pkg_cache:
+            digest_cache = pkg_cache.get('src', {}).get(digest_algo)
+            print('warning: cache mismatch %s != %s' % (digest, digest_cache))
         pkg_cache = None
 
     python_conditional_deps = []
@@ -169,7 +172,6 @@ for spec in args.package_spec:
 
         output = subprocess.check_output(['nix-build', '-E', '-', '--no-out-link'], input=expr.encode())
         dist_info = output.decode().strip()
-        print(dist_info, file=sys.stderr)
 
         if os.path.exists('%s/metadata.json' % dist_info):
             meta = Metadata('%s/metadata.json' % dist_info)
