@@ -5,6 +5,9 @@ with stdenv.lib;
 let
 
   fakeStdenv = stdenv // {
+    isDarwin = "stdenv.isDarwin";
+    isLinux = "stdenv.isLinux";
+
     lib = stdenv.lib // {
       licenses = mapAttrs (n: v: n) stdenv.lib.licenses;
       optional = expr: optional: [{ inherit expr optional; }];
