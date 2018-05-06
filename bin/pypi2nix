@@ -15,3 +15,18 @@ self:
 {$(find cache -name '*.nix' -exec cat {} +)
 }
 EOF
+
+if [ ! -f requirements.txt ]; then exit; fi
+
+cat <<-EOF
+self: super:
+
+{
+$(while read -r spec; do
+  key=${spec%==*}
+  attr=${spec//==/_}
+  attr=${attr//./_}
+  echo "  $key = self.$attr;"
+done < requirements.txt)
+}
+EOF
