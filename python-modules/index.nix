@@ -6,6 +6,7 @@ let
 
   fakeStdenv = stdenv // {
     lib = stdenv.lib // {
+      licenses = mapAttrs (n: v: n) stdenv.lib.licenses;
       optional = expr: optional: [{ inherit expr optional; }];
       optionals = expr: optionals: [{ inherit expr optionals; }];
     };
@@ -31,7 +32,7 @@ let
     then callPackage f (attr // fakeCallPackage f attr)
     else callPackage f attr;
 
-  toValue = attr: stdenv.lib.filterAttrs (n: v: !isFunction v && !isDerivation v) attr;
+  toValue = attr: filterAttrs (n: v: !isFunction v && !isDerivation v) attr;
 
 in
   toValue (self.override {
