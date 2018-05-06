@@ -18,6 +18,8 @@ if __name__ == '__main__':
     parser.add_argument('package_spec', type=str, nargs='*',
                         default=list(),
                         help='package requirement specifiers')
+    parser.add_argument('-r', '--requirement', type=str, action='append', default=list(),
+                        help='Use requirements file')
     parser.add_argument('-i', '--index-url', type=str,
                         default='https://pypi.org/simple',
                         help='URL of simple python package index')
@@ -87,7 +89,13 @@ else:
     cache = {}
 
 
+for path in args.requirement:
+    with open(path, 'r') as fd:
+        args.package_spec.extend(fd.readlines())
+
+
 for spec in args.package_spec:
+    spec, _, _ = spec.partition(';')
     req = parse_requirement(spec)
     key = normalize_name(req.name)
 
@@ -97,7 +105,7 @@ for spec in args.package_spec:
             pkg = {'key': key}
             pkg.update(pkg_cache)
             print(json.dumps(pkg))
-            exit(0)
+            continue
         else:
             exit(1)
 
@@ -185,7 +193,7 @@ for spec in args.package_spec:
 
     if args.print_json:
         print(json.dumps(pkg))
-        exit(0)
+        continue
 
     attr = '%s_%s' % (key, dist.version.replace('.', '_'))
     inputs = ['mkPythonPackage', 'pythonPlatform', 'stdenv', 'fetchurl'] + pkg['systemDepends']

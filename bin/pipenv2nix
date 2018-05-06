@@ -1,10 +1,23 @@
-#!/usr/bin/env bash
-set -e
-set -o pipefail
+#!/usr/bin/env nix-shell
+#!nix-shell -i bash -p pipenv
 
-freeze-requirements "$@" >/dev/null
-json=$(update-index "$@" -r requirements.txt)
+export PIPENV_CACHE_DIR=$HOME/.cache/pipenv
 
-echo "$json" | generate-packages > python-modules/pypi-packages.nix
-echo
-echo "$json" | generate-versions
+
+pipenv lock -r > requirements.txt
+
+
+pip2nix -r requirements.txt --print-json |
+while IFS=$'\r\n' read -r item; do
+
+key=$(jq -nr '$item.key' --argjson item "$item")
+version=$(jq -nr '$item.version' --argjson item "$item")
+attr=${key}_${version//./_}
+
+cat <<-EOF
+  ${key} = self.${attr};
+EOF
+
+done
+
+# vim:set ft=sh:
