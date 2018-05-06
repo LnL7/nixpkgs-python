@@ -13,15 +13,15 @@ let
   callPackage = pythonCallPackage;
 
   wheelSrc = fetchurl {
-    url = https://pypi.python.org/packages/py2.py3/w/wheel/wheel-0.29.0-py2.py3-none-any.whl;
-    sha256 = "1g8f0p8kp1k6kaa3rpbq396401qa84rlsivm5xjlx005k7y3707a";
+    url = "https://files.pythonhosted.org/packages/1b/d2/22cde5ea9af055f81814f9f2545f5ed8a053eb749c08d186b369959189a8/wheel-0.31.0-py2.py3-none-any.whl";
+    sha256 = "9cdc8ab2cc9c3c2e2727a4b67c22881dbb0e1c503d592992594c5e131c867107";
   };
 
   pip = runCommand "python${pythonPlatform.version}-pip"
     { buildInputs = [ python ]; }
     ''
       mkdir dist
-      ln -s ${wheelSrc} dist/wheel-0.29.0-py2.py3-none-any.whl
+      ln -s ${wheelSrc} dist/wheel-0.31.0-py2.py3-none-any.whl
 
       prefix=$(pwd)/.local
 
@@ -30,7 +30,7 @@ let
       export PYTHONPATH=$prefix/${pythonPlatform.sitePackages}
 
       ${pythonPlatform.python} -m ensurepip --user
-      ${pythonPlatform.pip} install wheel==0.29.0 --no-index --find-links ./dist --prefix $prefix
+      ${pythonPlatform.pip} install wheel==0.31.0 --no-index --find-links ./dist --prefix $prefix
 
       cp -r $prefix $out
 
