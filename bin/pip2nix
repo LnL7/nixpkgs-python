@@ -149,9 +149,8 @@ for spec in args.package_spec:
         dist_info = output.decode().strip()
         print(dist_info, file=sys.stderr)
 
-        path = '%s/metadata.json' % dist_info
-        if os.path.exists(path):
-            meta = Metadata(path)
+        if os.path.exists('%s/metadata.json' % dist_info):
+            meta = Metadata('%s/metadata.json' % dist_info)
 
             run_requires = meta.dependencies.get('run_requires', [])
             # print(json.dumps(run_requires), file=sys.stderr)
@@ -170,12 +169,14 @@ for spec in args.package_spec:
                     else:
                         python_deps.append({'expr': expr, 'optionals': deps})
                     python_conditional_deps.extend(deps)
+        elif os.path.exists('%s/METADATA' % dist_info):
+            meta = Metadata('%s/METADATA' % dist_info)
+        else:
+            print('warning: package metadata missing')
 
+        if meta:
             homepage = meta.dictionary.get('extensions', {}).get('python.details', {}).get('project_urls', {}).get('Home')
             meta = {'description': meta.summary, 'homepage': homepage, 'license': from_license(meta.license or '')}
-        else:
-            print('warning: metadata.json is missing', file=sys.stderr)
-            # TODO: parse METADATA?
 
     pkg['systemDepends'] = system_deps + args.system_depends
     python_deps = [x for x in python_deps if x not in python_conditional_deps]
