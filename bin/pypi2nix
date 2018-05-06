@@ -23,6 +23,7 @@ self: super:
 
 {
 $(while read -r spec; do
+  spec=${spec%;*}
   key=${spec%==*}
   attr=${spec//==/_}
   attr=${attr//./_}
