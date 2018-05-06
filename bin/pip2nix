@@ -74,6 +74,8 @@ def from_license(license):
         return 'bsd3'
     if 'MIT' in license:
         return 'mit'
+    if 'Python Software Foundation License' in license:
+        return 'psfl'
     return None
 
 
