@@ -76,6 +76,7 @@ def from_license(license):
         return 'mit'
     if 'Python Software Foundation License' in license:
         return 'psfl'
+    print('warning: unknown license %s' % license)
     return None
 
 
@@ -148,28 +149,33 @@ for spec in args.package_spec:
         dist_info = output.decode().strip()
         print(dist_info, file=sys.stderr)
 
-        meta = Metadata("%s/metadata.json" % dist_info)
+        path = '%s/metadata.json' % dist_info
+        if os.path.exists(path):
+            meta = Metadata(path)
 
-        run_requires = meta.dependencies.get('run_requires', [])
-        # print(json.dumps(run_requires), file=sys.stderr)
-        for item in (x for x in run_requires if x.get('extra') is None):
-            env = item.get('environment')
-            reqs = item.get('requires')
-            deps = [normalize_name(parse_requirement(x).name) for x in reqs]
-            expr = from_environment(env) if env else True
-            if expr is False:
-                print('warning: skipping environment %s' % env, file=sys.stderr)
-            elif expr is True:
-                python_deps.extend(deps)
-            else:
-                if len(deps) == 1:
-                    python_deps.append({'expr': expr, 'optional': deps[0]})
+            run_requires = meta.dependencies.get('run_requires', [])
+            # print(json.dumps(run_requires), file=sys.stderr)
+            for item in (x for x in run_requires if x.get('extra') is None):
+                env = item.get('environment')
+                reqs = item.get('requires')
+                deps = [normalize_name(parse_requirement(x).name) for x in reqs]
+                expr = from_environment(env) if env else True
+                if expr is False:
+                    print('warning: skipping environment %s' % env, file=sys.stderr)
+                elif expr is True:
+                    python_deps.extend(deps)
                 else:
-                    python_deps.append({'expr': expr, 'optionals': deps})
-                python_conditional_deps.extend(deps)
+                    if len(deps) == 1:
+                        python_deps.append({'expr': expr, 'optional': deps[0]})
+                    else:
+                        python_deps.append({'expr': expr, 'optionals': deps})
+                    python_conditional_deps.extend(deps)
 
-        homepage = meta.dictionary.get('extensions', {}).get('python.details', {}).get('project_urls', {}).get('Home')
-        meta = {'description': meta.summary, 'homepage': homepage, 'license': from_license(meta.license or '')}
+            homepage = meta.dictionary.get('extensions', {}).get('python.details', {}).get('project_urls', {}).get('Home')
+            meta = {'description': meta.summary, 'homepage': homepage, 'license': from_license(meta.license or '')}
+        else:
+            print('warning: metadata.json is missing', file=sys.stderr)
+            # TODO: parse METADATA?
 
     pkg['systemDepends'] = system_deps + args.system_depends
     python_deps = [x for x in python_deps if x not in python_conditional_deps]
