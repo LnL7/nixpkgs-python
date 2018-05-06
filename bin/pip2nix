@@ -76,8 +76,14 @@ def from_license(license):
         return 'asl20'
     if 'BSD' in license:
         return 'bsd3'
+    if 'ISC' in license:
+        return 'isc';
+    if 'LGPL' in license:
+        return 'lgpl3'
     if 'MIT' in license:
         return 'mit'
+    if 'MPL-2.0' in license:
+        return 'mpl20'
     if 'Python Software Foundation License' in license:
         return 'psfl'
     print('warning: unknown license %s' % license)
