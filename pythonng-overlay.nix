@@ -6,6 +6,8 @@ let
 
   mkPlatform = abi: version: rec {
     inherit abi version;
+    isPython27 = version == "2.7";
+    isPython36 = version == "3.6";
     pip = "pip${version}";
     python = "python${version}";
     sitePackages = "lib/${python}/site-packages";
