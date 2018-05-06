@@ -221,7 +221,7 @@ for spec in args.package_spec:
         if isinstance(dep, str):
             inputs.append(dep)
         elif 'optional' in dep:
-            inputs.extend(dep['optional'])
+            inputs.append(dep['optional'])
             python_expr += "\n         ++ stdenv.lib.optional %s %s" % (dep['expr'], dep['optional'])
         elif 'optionals' in dep:
             inputs.extend(dep['optionals'])
