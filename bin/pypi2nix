@@ -6,8 +6,9 @@ nix-instantiate --eval --strict --json -A pythonng.index \
   > pypi-requirements.txt
 
 pip2nix --no-print-expr -r pypi-requirements.txt "$@"
+rm pypi-requirements.txt
 
-cat <<-EOF > pypi-packages.nix
+cat <<-EOF > python-modules/pypi-packages.nix
 { pkgs, callPackage }:
 
 self:
