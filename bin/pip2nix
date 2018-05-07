@@ -76,6 +76,8 @@ def from_license(license):
         return 'asl20'
     if 'BSD' in license:
         return 'bsd3'
+    if 'GPLv2' in license:
+        return 'gpl2'
     if 'GPLv3' in license:
         return 'gpl3'
     if 'ISC' in license:
