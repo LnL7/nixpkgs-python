@@ -57,6 +57,8 @@ stdenv.mkDerivation {
 
     rm -rf $out/bin/__pycache__
 
+    PYTHONPATH=$out/${pythonPlatform.sitePackages} pip check
+
     runHook postInstall
   '';
 
