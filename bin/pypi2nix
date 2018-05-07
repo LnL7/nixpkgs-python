@@ -23,12 +23,15 @@ cat <<-EOF
 self: super:
 
 {
-$(while read -r spec; do
-  spec=${spec%;*}
-  key=${spec%==*}
-  attr=${spec//==/_}
-  attr=${attr//./_}
-  echo "  $key = self.$attr;"
+$(while read -r item; do
+  item=${item%;*}
+  key=${item%==*}
+  key=${key//./-}
+  key=${key//_/-}
+  version=${item#*==}
+  version=${version//-/_}
+  version=${version//./_}
+  echo "  $key = self.${key}_${version};"
 done < requirements.txt)
 }
 EOF
