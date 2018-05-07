@@ -55,6 +55,8 @@ stdenv.mkDerivation {
         done
     done
 
+    rm -rf $out/bin/__pycache__
+
     runHook postInstall
   '';
 
