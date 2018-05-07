@@ -6,6 +6,7 @@ in
 
 { pname, version, src
 , name ? "wheel-${pythonPlatform.abi}-${pname}-${version}"
+, meta ? {}
 , info ? mkPythonInfo { inherit pname version src; }
 , pipFlags ? []
 , systemDepends ? [], pythonDepends ? []
@@ -45,6 +46,6 @@ stdenv.mkDerivation (attr // {
   passthru = { inherit info pip; };
 
   meta = with stdenv.lib; {
-    meta.platforms = platforms.all;
-  };
+    platforms = platforms.all;
+  } // meta;
 })

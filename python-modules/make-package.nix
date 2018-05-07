@@ -1,9 +1,10 @@
 { pkgs, stdenv, coreutils, python, pip, pythonPlatform, mkPythonWheel }:
 
 { pname, version, src ? null
+, name ? "python${pythonPlatform.version}-${pname}-${version}"
+, meta ? {}
 , info ? wheel.info
 , wheel ? mkPythonWheel (builtins.removeAttrs attr ["wheel"])
-, name ? "python${pythonPlatform.version}-${pname}-${version}"
 , pipFlags ? [ "--ignore-installed" ]
 , systemDepends ? [], pythonDepends ? []
 , buildInputs ? [], propagatedBuildInputs ? []
@@ -67,6 +68,6 @@ stdenv.mkDerivation {
   passthru = { inherit info src pip; };
 
   meta = with stdenv.lib; {
-    meta.platforms = platforms.all;
-  };
+    platforms = platforms.all;
+  } // meta;
 }
