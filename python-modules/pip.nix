@@ -45,8 +45,8 @@ stdenv.mkDerivation {
 
   installPhase = ''
     ${pythonPlatform.pip} install \
-        --no-index --find-links ./dist --prefix $out \
-        pbr==4.0.2 wheel==0.29.0 setuptools==39.1.0 pip==9.0.3 \
+        --no-index --ignore-installed --find-links ./dist --prefix $out \
+        pbr==4.0.2 wheel==0.29.0 setuptools==39.1.0 pip==9.0.3
 
     for f in $out/bin/*; do
         substituteInPlace $f \
