@@ -13,6 +13,7 @@ in
 
 stdenv.mkDerivation (attr // {
   inherit name;
+  nix_setup = ./nix_setup.py;
 
   nativeBuildInputs = stdenv.lib.optional (isZip src) unzip
     ++ nativeBuildInputs;
@@ -20,10 +21,17 @@ stdenv.mkDerivation (attr // {
 
   SOURCE_DATE_EPOCH = "315532800";
 
+  postPatch = ''
+    if [ -f setup.cfg ]; then
+        sed -e '/license-file/d' -e '/license_file/d' -i setup.cfg
+    fi
+  '';
+
   buildPhase = ''
     runHook preBuild
 
-    ${pythonPlatform.python} ${./nix_setup.py} ${type}_info --egg-base .
+    cp $nix_setup nix_setup.py
+    ${pythonPlatform.python} nix_setup.py ${type}_info --egg-base .
 
     runHook postBuild
   '';
