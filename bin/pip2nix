@@ -281,10 +281,10 @@ for spec in args.package_spec:
     call_args = []
     for arg in pkg.get('callPackage', []):
         if isinstance(arg, str):
-            call_args.append(arg)
+            call_args.append(' %s;' % arg)
         if 'inherit' in arg:
             call_args.append('inherit (%s) %s;' % (arg['expr'], ' '.join(arg['inherit'])))
-    call_expr = '\n          '.join(call_args)
+    call_expr = ' \n          '.join(call_args)
 
     data = {'attr': attr, 'inputs_expr': inputs_expr, 'depends_expr': depends_expr, 'meta_expr': meta_expr, 'call_expr': call_expr}
     data.update(pkg)
@@ -303,7 +303,7 @@ for spec in args.package_spec:
        };%(depends_expr)s
        meta = with stdenv.lib; {%(meta_expr)s
        };
-     }) { %(call_expr)s };""" % data
+     }) {%(call_expr)s };""" % data
 
     if not args.no_print_expr:
         print(expr)
