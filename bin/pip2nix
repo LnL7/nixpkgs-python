@@ -133,13 +133,6 @@ for spec in args.package_spec:
     src = {'url': url, digest_algo: digest}
     pkg['src'] = src
 
-    if not args.no_overrides:
-        path = 'index/%s/overrides.json' % key
-        if os.path.exists(path):
-            with open(path, 'r') as fd:
-                data = json.load(fd)
-                pkg.update(data)
-
     pkg_cache = cache.get('%s_%s' % (key, dist.version.replace('.', '_')))
     if pkg_cache and digest == pkg_cache.get('src', {}).get(digest_algo, {}):
         pkg_cache.update(pkg)
@@ -147,7 +140,7 @@ for spec in args.package_spec:
     else:
         if pkg_cache:
             digest_cache = pkg_cache.get('src', {}).get(digest_algo)
-            print('warning: cache mismatch %s != %s' % (digest, digest_cache))
+            print('warning: cache mismatch for %s' % req.requirement)
         pkg_cache = None
 
     python_conditional_deps = []
@@ -206,11 +199,30 @@ for spec in args.package_spec:
             homepage = meta.dictionary.get('extensions', {}).get('python.details', {}).get('project_urls', {}).get('Home')
             meta = {'description': meta.summary, 'homepage': homepage, 'license': from_license(meta.license or '')}
 
+    if not args.no_overrides:
+        path = 'index/%s/overrides.json' % key
+        if os.path.exists(path):
+            with open(path, 'r') as fd:
+                pkg_data = json.load(fd)
+            data = pkg_data.pop('systemDepends', None)
+            if data:
+                system_deps = [x for x in system_deps if x not in data]
+                system_deps.extend(data)
+            data = pkg_data.pop('pythonDepends', None)
+            if data:
+                python_deps = [x for x in python_deps if x not in data]
+                python_deps.extend(data)
+            data = pkg_data.pop('meta', None)
+            if data:
+                meta.update(data)
+            pkg.update(pkg_data)
+
     system_deps += [x for x in args.system_depends if x not in system_deps]
     pkg['systemDepends'] = system_deps
     python_deps += [x for x in args.python_depends if x not in python_deps]
     python_deps = [x for x in python_deps if x not in python_conditional_deps]
     pkg['pythonDepends'] = python_deps
+
     pkg['meta'] = meta
 
     if args.print_json:
