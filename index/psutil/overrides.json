@@ -1,0 +1,1 @@
+{"callPackage":[{"expr":"pkgs.darwin.apple_sdk.frameworks","inherit":["IOKit"]}],"systemDepends":[{"expr":"stdenv.isDarwin","optional":"IOKit"}]}
