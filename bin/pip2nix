@@ -230,8 +230,19 @@ for spec in args.package_spec:
         continue
 
     attr = '%s_%s' % (key, dist.version.replace('.', '_'))
-    inputs = ['mkPythonPackage', 'pythonPlatform', 'stdenv', 'fetchurl'] + pkg['systemDepends']
-    system_expr = '[ %s ]' % ' '.join(pkg['systemDepends'])
+    inputs = ['mkPythonPackage', 'pythonPlatform', 'stdenv', 'fetchurl']
+
+    system_expr = '[ %s ]' % ' '.join([x for x in pkg['systemDepends'] if isinstance(x, str)])
+    for dep in pkg['systemDepends']:
+        if isinstance(dep, str):
+            inputs.append(dep)
+        elif 'optional' in dep:
+            inputs.append(dep['optional'])
+            system_expr += "\n         ++ stdenv.lib.optional %s %s" % (dep['expr'], dep['optional'])
+        elif 'optionals' in dep:
+            inputs.extend(dep['optionals'])
+            system_expr += "\n         ++ stdenv.lib.optionals %s [ %s ]" % (dep['expr'], ' '.join(dep['optionals']))
+
     python_expr = '[ %s ]' % ' '.join([x for x in pkg['pythonDepends'] if isinstance(x, str)])
     for dep in pkg['pythonDepends']:
         if isinstance(dep, str):
