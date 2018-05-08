@@ -10,6 +10,7 @@ let
 
     lib = stdenv.lib // {
       licenses = mapAttrs (n: v: n) stdenv.lib.licenses;
+      platforms = mapAttrs (n: v: [n]) stdenv.lib.platforms;
       optional = expr: optional: [{ inherit expr optional; }];
       optionals = expr: optionals: [{ inherit expr optionals; }];
     };

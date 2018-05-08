@@ -277,6 +277,8 @@ for spec in args.package_spec:
         meta_expr += '\n         homepage = "%s";' % meta['homepage']
     if meta.get('license'):
         meta_expr += '\n         license = licenses.%s;' % meta['license']
+    if meta.get('platforms'):
+        meta_expr += '\n         platforms = platforms.%s;' % ' ++ '.join(meta['platforms'])
 
     call_args = []
     for arg in pkg.get('callPackage', []):
