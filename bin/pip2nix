@@ -232,34 +232,42 @@ for spec in args.package_spec:
     attr = '%s_%s' % (key, dist.version.replace('.', '_'))
     inputs = ['mkPythonPackage', 'pythonPlatform', 'stdenv', 'fetchurl']
 
-    system_expr = '[ %s ]' % ' '.join([x for x in pkg['systemDepends'] if isinstance(x, str)])
+    system_exprs = []
+    deps = [x for x in pkg['systemDepends'] if isinstance(x, str)]
+    if deps:
+        system_exprs.append('[ %s ]' % ' '.join(deps))
     for dep in pkg['systemDepends']:
         if isinstance(dep, str):
             inputs.append(dep)
         elif 'optional' in dep:
             inputs.append(dep['optional'])
-            system_expr += "\n         ++ stdenv.lib.optional %s %s" % (dep['expr'], dep['optional'])
+            system_exprs.append('stdenv.lib.optional %s %s' % (dep['expr'], dep['optional']))
         elif 'optionals' in dep:
             inputs.extend(dep['optionals'])
-            system_expr += "\n         ++ stdenv.lib.optionals %s [ %s ]" % (dep['expr'], ' '.join(dep['optionals']))
+            system_exprs.append('stdenv.lib.optionals %s [ %s ]' % (dep['expr'], ' '.join(dep['optionals'])))
+    system_expr = '\n         ++ '.join(system_exprs)
 
-    python_expr = '[ %s ]' % ' '.join([x for x in pkg['pythonDepends'] if isinstance(x, str)])
+    python_exprs = []
+    deps = [x for x in pkg['pythonDepends'] if isinstance(x, str)]
+    if deps:
+        python_exprs.append('[ %s ]' % ' '.join(deps))
     for dep in pkg['pythonDepends']:
         if isinstance(dep, str):
             inputs.append(dep)
         elif 'optional' in dep:
             inputs.append(dep['optional'])
-            python_expr += "\n         ++ stdenv.lib.optional %s %s" % (dep['expr'], dep['optional'])
+            python_exprs.append('\n         ++ stdenv.lib.optional %s %s' % (dep['expr'], dep['optional']))
         elif 'optionals' in dep:
             inputs.extend(dep['optionals'])
-            python_expr += "\n         ++ stdenv.lib.optionals %s [ %s ]" % (dep['expr'], ' '.join(dep['optionals']))
+            python_exprs.append('stdenv.lib.optionals %s [ %s ]' % (dep['expr'], ' '.join(dep['optionals'])))
+    python_expr = '\n         ++ '.join(python_exprs)
 
     inputs_expr = ', '.join(inputs)
 
     depends_expr = ''
-    if pkg['systemDepends']:
+    if system_expr:
         depends_expr += '\n       systemDepends = %s;' % system_expr
-    if pkg['pythonDepends']:
+    if python_expr:
         depends_expr += '\n       pythonDepends = %s;' % python_expr
 
     meta_expr = ''
