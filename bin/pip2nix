@@ -183,6 +183,7 @@ for spec in args.package_spec:
                 if expr is False:
                     print('warning: skipping environment %s' % env, file=sys.stderr)
                 elif expr is True:
+                    python_deps = [x for x in python_deps if x not in deps]
                     python_deps.extend(deps)
                 else:
                     if len(deps) == 1:
@@ -256,7 +257,7 @@ for spec in args.package_spec:
             inputs.append(dep)
         elif 'optional' in dep:
             inputs.append(dep['optional'])
-            python_exprs.append('\n         ++ stdenv.lib.optional %s %s' % (dep['expr'], dep['optional']))
+            python_exprs.append('stdenv.lib.optional %s %s' % (dep['expr'], dep['optional']))
         elif 'optionals' in dep:
             inputs.extend(dep['optionals'])
             python_exprs.append('stdenv.lib.optionals %s [ %s ]' % (dep['expr'], ' '.join(dep['optionals'])))
