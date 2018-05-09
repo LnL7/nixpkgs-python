@@ -1,6 +1,6 @@
 { pkgs, stdenv, buildEnv, mkShell, runCommand, fetchurl
 , python, virtualenv, pythonPlatform, self
-, pythonCallPackage ? stdenv.lib.callPackageWith (pkgs // { inherit self; } // self)
+, pythonCallPackage ? null
 , overrides ? (self: super: {})
 , interpreterConfig ? (self: super: {})
 , versionConfig ? import ./versions.nix
@@ -10,7 +10,12 @@
 
 let
   inherit (stdenv.lib) extends makeExtensible;
-  callPackage = pythonCallPackage;
+
+  callPackage = if pythonCallPackage != null
+    then pythonCallPackage
+    else stdenv.lib.callPackageWith pythonScope;
+
+  pythonScope = pkgs // { inherit self; } // pythonPackages;
 
   pip = callPackage ./pip.nix {
     inherit python pythonPlatform;
