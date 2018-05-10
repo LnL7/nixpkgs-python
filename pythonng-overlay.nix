@@ -2,7 +2,7 @@ self: super:
 
 let
   inherit (self) pythonng;
-  inherit (super) stdenv callPackage;
+  inherit (super) stdenv callPackage recurseIntoAttrs;
 
   mkPlatform = abi: version: rec {
     inherit abi version;
@@ -15,25 +15,31 @@ let
 in
 
 {
-  pythonng.interpreter.cpython27 = pythonng.packages.cpython27.python;
-  pythonng.interpreter.cpython36 = pythonng.packages.cpython36.python;
+  pythonng = {
+    interpreter = recurseIntoAttrs {
+      cpython27 = pythonng.packages.cpython27.python;
+      cpython36 = pythonng.packages.cpython36.python;
+    };
 
-  pythonng.packages.cpython27 = callPackage ./python-modules {
-    interpreterConfig = import ./python-modules/configuration-2.7.nix;
-    python = super.python27;
-    virtualenv = super.python27.pkgs.virtualenv;
-    pythonPlatform = mkPlatform "cp27" "2.7";
-  };
+    packages = recurseIntoAttrs {
+      cpython27 = callPackage ./python-modules {
+        interpreterConfig = import ./python-modules/configuration-2.7.nix;
+        python = super.python27;
+        virtualenv = super.python27.pkgs.virtualenv;
+        pythonPlatform = mkPlatform "cp27" "2.7";
+      };
 
-  pythonng.packages.cpython36 = callPackage ./python-modules {
-    interpreterConfig = import ./python-modules/configuration-3.6.nix;
-    python = super.python36;
-    virtualenv = super.python36.pkgs.virtualenv;
-    pythonPlatform = mkPlatform "cp36" "3.6";
-  };
+      cpython36 = callPackage ./python-modules {
+        interpreterConfig = import ./python-modules/configuration-3.6.nix;
+        python = super.python36;
+        virtualenv = super.python36.pkgs.virtualenv;
+        pythonPlatform = mkPlatform "cp36" "3.6";
+      };
+    };
 
-  pythonng.index = import ./python-modules/index.nix {
-    inherit stdenv callPackage;
-    pythonScope = pythonng.packages.cpython36;
+    index = import ./python-modules/index.nix {
+      inherit stdenv callPackage;
+      pythonScope = pythonng.packages.cpython36;
+    };
   };
 }
