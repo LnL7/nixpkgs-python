@@ -1,4 +1,4 @@
-{ stdenv, callPackage, self }:
+{ stdenv, callPackage, pythonScope }:
 
 with stdenv.lib;
 
@@ -16,7 +16,7 @@ let
     };
   };
 
-  fakePythonPlatform = self.pythonPlatform // {
+  fakePythonPlatform = pythonScope.pythonPlatform // {
     isPython27 = "pythonPlatform.isPython27";
     isPython36 = "pythonPlatform.isPython36";
   };
@@ -39,7 +39,7 @@ let
   toValue = attr: filterAttrs (n: v: !isFunction v && !isDerivation v) attr;
 
 in
-  toValue (self.override {
+  toValue (pythonScope.override {
     configurationCommon = _: self: super: {};
     interpreterConfig = self: super: {};
     versionConfig = self: super: {};

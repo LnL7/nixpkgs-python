@@ -1,25 +1,23 @@
-{ pkgs, buildEnv, mkShell, python, virtualenv, pythonPlatform, self }:
+{ pkgs, buildEnv, mkShell, python, virtualenv, pythonPlatform, pythonScope }:
 
 { withPackages
-, overrides ? (self: super: {})
-, pythonDepends ? []
 , buildInputs ? []
 , installHook ? "", pipFlags ? ""
 , shellHook ? ""
 }:
 
 let
-  inherit (python) sitePackages;
+  pythonDepends = withPackages pythonScope;
 
   env = buildEnv {
     name = "${python.name}-environment";
-    paths = pythonDepends ++ withPackages (self.override { inherit overrides; });
+    paths = pythonDepends;
   };
 in
 
 mkShell {
   name = "${python.name}-shell-environment";
-  inherit pipFlags;
+  inherit env pythonDepends pipFlags;
 
   buildInputs = [ env ] ++ buildInputs;
 
@@ -34,7 +32,7 @@ mkShell {
     fi
     if test ${env} != "$(readlink venv/nix-profile)"; then
       rm venv/nix-profile 2> /dev/null || true
-      echo ${env}/${sitePackages} > venv/${sitePackages}/${env.name}.pth
+      echo ${env}/${pythonPlatform.sitePackages} > venv/${pythonPlatform.sitePackages}/${env.name}.pth
       nix-store -r ${env} --indirect --add-root $PWD/venv/nix-profile > /dev/null
     fi
 

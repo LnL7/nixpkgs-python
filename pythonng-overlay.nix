@@ -2,7 +2,7 @@ self: super:
 
 let
   inherit (self) pythonng;
-  inherit (super) pkgs stdenv callPackage;
+  inherit (super) stdenv callPackage;
 
   mkPlatform = abi: version: rec {
     inherit abi version;
@@ -20,24 +20,20 @@ in
 
   pythonng.packages.cpython27 = callPackage ./python-modules {
     interpreterConfig = import ./python-modules/configuration-2.7.nix;
-    python = pkgs.python27;
-    virtualenv = pkgs.python27.pkgs.virtualenv;
+    python = super.python27;
+    virtualenv = super.python27.pkgs.virtualenv;
     pythonPlatform = mkPlatform "cp27" "2.7";
-
-    self = pythonng.packages.cpython27;
   };
 
   pythonng.packages.cpython36 = callPackage ./python-modules {
     interpreterConfig = import ./python-modules/configuration-3.6.nix;
-    python = pkgs.python36;
-    virtualenv = pkgs.python36.pkgs.virtualenv;
+    python = super.python36;
+    virtualenv = super.python36.pkgs.virtualenv;
     pythonPlatform = mkPlatform "cp36" "3.6";
-
-    self = pythonng.packages.cpython36;
   };
 
   pythonng.index = import ./python-modules/index.nix {
     inherit stdenv callPackage;
-    self = pythonng.packages.cpython36;
+    pythonScope = pythonng.packages.cpython36;
   };
 }

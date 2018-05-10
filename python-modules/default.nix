@@ -1,5 +1,5 @@
 { pkgs, stdenv, buildEnv, mkShell, runCommand, fetchurl
-, python, virtualenv, pythonPlatform, self
+, python, virtualenv, pythonPlatform
 , pythonCallPackage ? null
 , overrides ? (self: super: {})
 , interpreterConfig ? (self: super: {})
@@ -15,7 +15,7 @@ let
     then pythonCallPackage
     else stdenv.lib.callPackageWith pythonScope;
 
-  pythonScope = pkgs // { inherit self; } // pythonPackages;
+  pythonScope = pkgs // { inherit pythonPlatform; } // pythonPackages;
 
   pip = callPackage ./pip.nix {
     inherit python pythonPlatform;
@@ -34,14 +34,14 @@ let
   };
 
   mkShellEnv = callPackage ./make-virtualenv.nix {
-    inherit python virtualenv pythonPlatform;
+    inherit python virtualenv pythonPlatform pythonScope;
   };
 
   commonConfig = configurationCommon { inherit pkgs callPackage; };
   initialSet = initialPackages { inherit pkgs callPackage; };
 
   packageSet = self: initialSet self // {
-    inherit pythonPlatform callPackage mkPythonInfo mkPythonWheel mkPythonPackage mkShellEnv;
+    inherit callPackage mkPythonInfo mkPythonWheel mkPythonPackage mkShellEnv;
     python = python // { mkDerivation = mkPythonPackage; };
 
     virtualenvWithPackages = withPackages: mkShellEnv {
