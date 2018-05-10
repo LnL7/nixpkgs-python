@@ -129,7 +129,8 @@ for spec in args.package_spec:
 
     dist = loc.locate(req.requirement)
     pkg = {'key': key, 'pname': dist.name.replace('-', '_'), 'version': dist.version}
-    url, (digest_algo, digest) = next((k, v) for k, v in dist.digests.items() if not k.endswith('.whl'))
+    sort_keys = {'whl': 10, 'zip': 1}
+    url, (digest_algo, digest) = sorted(dist.digests.items(), key=lambda item: sort_keys.get(item[0].rpartition('.')[2], 0))[0]
     src = {'url': url, digest_algo: digest}
     pkg['src'] = src
 
