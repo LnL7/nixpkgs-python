@@ -19,19 +19,31 @@ EOF
 
 if [ ! -f requirements.txt ]; then exit; fi
 
+generate() {
+  local item=$1
+
+  item=${item%%#*}
+  item=${item%%;*}
+  item=${item%% *}
+
+  case $item in
+    *==*)
+      key=${item%==*}
+      key=${key//./-}
+      key=${key//_/-}
+      version=${item#*==}
+      version=${version//-/_}
+      version=${version//./_}
+      echo "  $key = self.${key}_${version};";;
+  esac
+}
+
 cat <<-EOF
 self: super:
 
 {
 $(while read -r item; do
-  item=${item%;*}
-  key=${item%==*}
-  key=${key//./-}
-  key=${key//_/-}
-  version=${item#*==}
-  version=${version//-/_}
-  version=${version//./_}
-  echo "  $key = self.${key}_${version};"
+  generate "$item"
 done < requirements.txt)
 }
 EOF

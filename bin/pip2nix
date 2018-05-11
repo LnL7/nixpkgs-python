@@ -107,6 +107,7 @@ for path in args.requirement:
 
 
 for spec in args.package_spec:
+    spec, _, _ = spec.strip().partition('#')
     spec, _, _ = spec.strip().partition(';')
     if not spec:
         continue
