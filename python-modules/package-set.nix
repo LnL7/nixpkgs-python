@@ -30,6 +30,11 @@ let
     inherit (self) python pythonPlatform mkPythonWheel;
   };
 
+  mkPythonEnv = pkgs.callPackage ./make-python.nix {
+    inherit (self) python pythonPlatform;
+    pythonScope = self;
+  };
+
   mkShellEnv = pkgs.callPackage ./make-virtualenv.nix {
     inherit virtualenv;
     inherit (self) python pythonPlatform;
@@ -38,10 +43,14 @@ let
 in
 
 packageSet { inherit pkgs callPackage; } self // {
-  inherit callPackage pythonPlatform mkPythonInfo mkPythonPackage mkPythonWheel mkShellEnv;
+  inherit callPackage pythonPlatform mkPythonInfo mkPythonPackage mkPythonWheel mkPythonEnv mkShellEnv;
 
   python = python // {
     mkDerivation = self.mkPythonPackage;
+  };
+
+  pythonWithPackages = withPackages: self.mkPythonEnv {
+    inherit withPackages;
   };
 
   virtualenvWithPackages = withPackages: self.mkShellEnv {
