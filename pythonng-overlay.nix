@@ -41,5 +41,9 @@ in
       inherit stdenv callPackage;
       pythonScope = pythonng.packages.cpython36;
     };
+
+    lib = import ./python-modules/lib.nix {
+      inherit (stdenv) lib;
+    };
   };
 }
