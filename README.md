@@ -54,3 +54,17 @@ ipython.override {
   ]);
 }
 ```
+
+Overriding the default version of a package.
+
+```nix
+let
+  pkgs = pythonng.packages.cpython36.override {
+    overrides = self: super: {
+      pycparser = self.pycparser_2_14;
+    };
+  };
+in
+
+pkgs.cffi
+```
