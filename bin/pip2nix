@@ -88,8 +88,10 @@ def from_license(license):
         return 'mit'
     if 'MPL-2.0' in license:
         return 'mpl20'
-    if 'PSF' in license or 'Python Software Foundation License' in license:
+    if 'PSF' in license or 'Python' in license:
         return 'psfl'
+    if 'ZPL' in license:
+        return 'zpl21'
     print('warning: unknown license %s' % license)
     return None
 
