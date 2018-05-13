@@ -292,6 +292,8 @@ for spec in args.package_spec:
         meta_expr += '\n         license = licenses.%s;' % meta['license']
     if meta.get('platforms'):
         meta_expr += '\n         platforms = platforms.%s;' % ' ++ '.join(meta['platforms'])
+    if meta.get('python'):
+        meta_expr += '\n         python = pythonPlatform.%s;' % ' ++ '.join(meta['python'])
 
     call_args = []
     for arg in pkg.get('callPackage', []):

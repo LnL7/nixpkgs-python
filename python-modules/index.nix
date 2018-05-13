@@ -23,6 +23,9 @@ let
   fakePythonPlatform = pythonScope.pythonPlatform // {
     isPython27 = "pythonPlatform.isPython27";
     isPython36 = "pythonPlatform.isPython36";
+
+    python27 = ["python27"];
+    python36 = ["python36"];
   };
 
   fakeScope = {
