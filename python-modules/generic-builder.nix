@@ -18,7 +18,7 @@ stdenv.mkDerivation {
   pipFlags = [ "--isolated" "--no-cache-dir" "--no-deps" "--no-index" ] ++ pipFlags;
 
   buildInputs = [ pip ] ++ buildInputs;
-  propagatedBuildInputs = [ python ] ++ systemDepends ++ pythonDepends ++ propagatedBuildInputs;
+  propagatedBuildInputs = [ python ] ++ systemDepends ++ propagatedBuildInputs;
 
   installPhase = ''
     runHook preInstall
