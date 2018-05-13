@@ -1,4 +1,6 @@
-{ pythonPlatform, python, stdenv, fetchurl, coreutils }:
+{ pythonPlatform, python, stdenv, fetchurl, coreutils
+, withPbr ? true
+}:
 
 let
   pbr = fetchurl {
@@ -22,13 +24,15 @@ let
   };
 in
 
-stdenv.mkDerivation {
+stdenv.mkDerivation rec {
   name = "python${pythonPlatform.version}-pip";
   buildInputs = [ python ];
 
+  wheels = [ wheel setuptools pip ] ++ stdenv.lib.optional withPbr pbr;
+
   unpackPhase = ''
     mkdir dist
-    ${stdenv.lib.concatMapStringsSep "\n" (src: "ln -s ${src} dist/${src.name}") [ pbr wheel setuptools pip ]}
+    ${stdenv.lib.concatMapStringsSep "\n" (src: "ln -s ${src} dist/${src.name}") wheels}
   '';
 
   configurePhase = ''
@@ -46,7 +50,7 @@ stdenv.mkDerivation {
   installPhase = ''
     ${pythonPlatform.pip} install \
         --no-index --ignore-installed --find-links ./dist --prefix $out \
-        pbr==4.0.2 wheel==0.29.0 setuptools==39.1.0 pip==9.0.3
+        wheel==0.29.0 setuptools==39.1.0 pip==9.0.3 ${stdenv.lib.optionalString withPbr "pbr==4.0.2"}
   '';
 
   postFixup = ''
