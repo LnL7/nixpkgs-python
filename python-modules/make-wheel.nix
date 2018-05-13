@@ -8,7 +8,7 @@ in
 , name ? "wheel-${pythonPlatform.abi}-${pname}-${version}"
 , meta ? {}
 , info ? mkPythonInfo { inherit pname version src; }
-, pipFlags ? []
+, pipFlags ? [], pipWheelFlags ? []
 , systemDepends ? [], pythonDepends ? []
 , buildInputs ? [], nativeBuildInputs ? []
 , propagatedBuildInputs ? []
@@ -17,7 +17,8 @@ in
 
 stdenv.mkDerivation (attr // {
   inherit name systemDepends pythonDepends;
-  pipFlags = [ "--isolated" "--no-cache-dir" "--no-deps" "--no-index" ] ++ pipFlags;
+  pipFlags = [ "--isolated" "--no-cache-dir" "--disable-pip-version-check" ] ++ pipFlags;
+  pipWheelFlags = [ "--no-deps" "--no-index" ] ++ pipWheelFlags;
 
   nativeBuildInputs = stdenv.lib.optional (isZip src) unzip
     ++ nativeBuildInputs;
@@ -29,7 +30,7 @@ stdenv.mkDerivation (attr // {
   buildPhase = ''
     runHook preBuild
 
-    ${pythonPlatform.pip} wheel . $pipFlags --wheel-dir ./dist
+    ${pythonPlatform.pip} wheel . $pipFlags $pipWheelFlags --wheel-dir ./dist
 
     runHook postBuild
   '';

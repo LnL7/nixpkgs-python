@@ -5,9 +5,10 @@
 , meta ? {}
 , info ? wheel.info
 , wheel ? mkPythonWheel (builtins.removeAttrs attr ["wheel"])
-, pipFlags ? [ "--ignore-installed" ]
+, pipFlags ? [], pipInstallFlags ? [ "--ignore-installed" ]
 , systemDepends ? [], pythonDepends ? []
 , buildInputs ? [], propagatedBuildInputs ? []
+, postFixup ? ""
 , ... }@attr:
 
 stdenv.mkDerivation {
@@ -15,7 +16,8 @@ stdenv.mkDerivation {
   inherit systemDepends pythonDepends;
   src = wheel;
 
-  pipFlags = [ "--isolated" "--no-cache-dir" "--no-deps" "--no-index" ] ++ pipFlags;
+  pipFlags = [ "--isolated" "--no-cache-dir" "--disable-pip-version-check" ] ++ pipFlags;
+  pipInstallFlags = [ "--no-deps" "--no-index" ] ++ pipInstallFlags;
 
   buildInputs = [ pip ] ++ buildInputs;
   propagatedBuildInputs = [ python ] ++ systemDepends ++ propagatedBuildInputs;
@@ -32,7 +34,7 @@ stdenv.mkDerivation {
     # This option is only relevant when the sandbox is disabled.
     export PYTHONNOUSERSITE=1;
 
-    ${pythonPlatform.pip} install '${pname}==${version}' $pipFlags --find-links ./dist --prefix $out
+    ${pythonPlatform.pip} install '${pname}==${version}' $pipFlags $pipInstallFlags --find-links ./dist --prefix $out
 
     for dep in $pythonDepends; do
         for f in $dep/${pythonPlatform.sitePackages}/*; do
@@ -57,7 +59,7 @@ stdenv.mkDerivation {
 
     rm -rf $out/bin/__pycache__
 
-    PYTHONPATH=$out/${pythonPlatform.sitePackages} pip check
+    PYTHONPATH=$out/${pythonPlatform.sitePackages} pip check $pipFlags
 
     runHook postInstall
   '';
@@ -67,7 +69,7 @@ stdenv.mkDerivation {
         substituteInPlace $f \
             --replace "import sys" "import sys; sys.path.append('$out/${pythonPlatform.sitePackages}')"
     done
-  '';
+  '' + postFixup;
 
   passthru = { inherit info src pip; };
 
