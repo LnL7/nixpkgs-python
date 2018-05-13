@@ -1,5 +1,9 @@
 { pkgs, stdenv, coreutils, python, pip, pythonPlatform, pythonScope, mkPythonWheel }:
 
+let
+  checkPython = stdenv.lib.any (x: stdenv.lib.matchAttrs x pythonPlatform);
+in
+
 { pname, version, src ? null
 , name ? "python${pythonPlatform.version}-${pname}-${version}"
 , meta ? {}
@@ -75,5 +79,6 @@ stdenv.mkDerivation {
 
   meta = with stdenv.lib; {
     platforms = platforms.all;
+    broken = !checkPython (meta.python or [{}]);
   } // meta;
 }

@@ -11,6 +11,9 @@ let
     pip = "pip${version}";
     python = "python${version}";
     sitePackages = "lib/${python}/site-packages";
+
+    python27 = [{ version = "2.7"; }];
+    python36 = [{ version = "3.6"; }];
   };
 in
 
