@@ -150,6 +150,13 @@ for spec in args.package_spec:
     python_deps = pkg.get('pythonDepends', [])
     meta = pkg.get('meta', {})
 
+    pkg_overrides = {}
+    if not args.no_overrides:
+        path = 'index/%s/overrides.json' % key
+        if os.path.exists(path):
+            with open(path, 'r') as fd:
+                pkg_overrides = json.load(fd)
+
     if not args.no_dist_info and not pkg_cache:
         data = {}
         data.update(pkg)
@@ -169,8 +176,13 @@ for spec in args.package_spec:
             }) {}
         """ % data
 
-        output = subprocess.check_output(['nix-build', '-E', '-', '--no-out-link'], input=expr.encode())
-        dist_info = output.decode().strip()
+        try:
+            output = subprocess.check_output(['nix-build', '-E', '-', '--no-out-link'], input=expr.encode())
+            dist_info = output.decode().strip()
+        except subprocess.CalledProcessError:
+            if 'meta' not in pkg_overrides:
+                raise
+            dist_info = ''
 
         if os.path.exists('%s/metadata.json' % dist_info):
             meta = Metadata('%s/metadata.json' % dist_info)
@@ -202,23 +214,19 @@ for spec in args.package_spec:
             homepage = meta.dictionary.get('extensions', {}).get('python.details', {}).get('project_urls', {}).get('Home')
             meta = {'description': meta.summary, 'homepage': homepage, 'license': from_license(meta.license or '')}
 
-    if not args.no_overrides:
-        path = 'index/%s/overrides.json' % key
-        if os.path.exists(path):
-            with open(path, 'r') as fd:
-                pkg_data = json.load(fd)
-            data = pkg_data.pop('systemDepends', None)
-            if data:
-                system_deps = [x for x in system_deps if x not in data]
-                system_deps.extend(data)
-            data = pkg_data.pop('pythonDepends', None)
-            if data:
-                python_deps = [x for x in python_deps if x not in data]
-                python_deps.extend(data)
-            data = pkg_data.pop('meta', None)
-            if data:
-                meta.update(data)
-            pkg.update(pkg_data)
+    if pkg_overrides:
+        data = pkg_overrides.pop('systemDepends', None)
+        if data:
+            system_deps = [x for x in system_deps if x not in data]
+            system_deps.extend(data)
+        data = pkg_overrides.pop('pythonDepends', None)
+        if data:
+            python_deps = [x for x in python_deps if x not in data]
+            python_deps.extend(data)
+        data = pkg_overrides.pop('meta', None)
+        if data:
+            meta.update(data)
+        pkg.update(pkg_overrides)
 
     system_deps += [x for x in args.system_depends if x not in system_deps]
     pkg['systemDepends'] = system_deps
