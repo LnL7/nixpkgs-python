@@ -24,3 +24,29 @@ requires specifying the dependencies manually (or using overrides).
 ```sh
 pip2nix --no-dist-info psycopg2==2.7.4
 ```
+
+## Python environments
+
+An interpreter with packages.
+
+```nix
+with pythonng.packages.cpython36;
+
+pythonWithPackages (p: with p; [
+  cryptography
+  lxml
+  pyyaml
+])
+```
+
+Extending a package (binary) with extra dependencies.
+
+```nix
+with pythonng.packages.cpython36;
+
+ipython.override {
+  python = pythonWithPackages (p: with p; [
+    pyyaml
+  ]);
+}
+```
