@@ -233,7 +233,7 @@ for spec in args.package_spec:
         continue
 
     attr = '%s_%s' % (key, dist.version.replace('.', '_'))
-    inputs = ['mkPythonPackage', 'pythonPlatform', 'stdenv', 'fetchurl']
+    inputs = ['python', 'pythonPlatform', 'stdenv', 'fetchurl']
 
     system_exprs = []
     deps = [x for x in pkg['systemDepends'] if isinstance(x, str)]
@@ -299,7 +299,7 @@ for spec in args.package_spec:
     expr = """
   %(attr)s = callPackage
     ({ %(inputs_expr)s }:
-     mkPythonPackage {
+     python.mkDerivation {
        pname = "%(pname)s";
        version = "%(version)s";
        src = fetchurl {

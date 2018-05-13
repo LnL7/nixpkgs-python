@@ -25,7 +25,7 @@ let
     inherit (self) python pythonPlatform mkPythonInfo;
   };
 
-  mkPythonPackage = pkgs.callPackage ./make-package.nix {
+  mkPythonDerivation = pkgs.callPackage ./generic-builder.nix {
     inherit pip;
     inherit (self) python pythonPlatform mkPythonWheel;
   };
@@ -43,10 +43,10 @@ let
 in
 
 packageSet { inherit pkgs callPackage; } self // {
-  inherit callPackage pythonPlatform mkPythonInfo mkPythonPackage mkPythonWheel mkPythonEnv mkShellEnv;
+  inherit callPackage pythonPlatform mkPythonInfo mkPythonWheel mkPythonDerivation mkPythonEnv mkShellEnv;
 
   python = python // {
-    mkDerivation = self.mkPythonPackage;
+    mkDerivation = self.mkPythonDerivation;
   };
 
   pythonWithPackages = withPackages: self.mkPythonEnv {

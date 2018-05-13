@@ -16,16 +16,22 @@ let
     };
   };
 
+  fakePython = {
+    mkDerivation = id;
+  };
+
   fakePythonPlatform = pythonScope.pythonPlatform // {
     isPython27 = "pythonPlatform.isPython27";
     isPython36 = "pythonPlatform.isPython36";
   };
 
   fakeScope = {
-    stdenv = fakeStdenv;
-    pythonPlatform = fakePythonPlatform;
     fetchurl = id;
-    mkPythonPackage = id;
+    python = fakePython;
+    pythonPlatform = fakePythonPlatform;
+    stdenv = fakeStdenv;
+
+    mkPythonPackage = id;  # removed
   };
 
   fakeCallPackage = f: attr:
