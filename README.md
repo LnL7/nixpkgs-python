@@ -19,8 +19,8 @@ pip2nix cffi==1.11.5
 ```
 
 If the dist-info generation fails it can be skipped, however this
-requires specifying the dependencies manually.
+requires specifying the dependencies manually (or using overrides).
 
 ```sh
-pip2nix --no-dist-info --python-depends pycparser cffi==1.11.5
+pip2nix --no-dist-info psycopg2==2.7.4
 ```

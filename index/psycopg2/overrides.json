@@ -1,1 +1,1 @@
-{"systemDepends":["openssl","postgresql"]}
+{"systemDepends":["openssl","postgresql"],"meta":{"description": "psycopg2 - Python-PostgreSQL Database Adapter","homepage": "http://initd.org/psycopg/","license": "lgpl3"}}
