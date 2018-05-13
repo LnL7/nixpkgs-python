@@ -1,4 +1,4 @@
-{ pkgs, stdenv, coreutils, python, pip, pythonPlatform, mkPythonWheel }:
+{ pkgs, stdenv, coreutils, python, pip, pythonPlatform, pythonScope, mkPythonWheel }:
 
 { pname, version, src ? null
 , name ? "python${pythonPlatform.version}-${pname}-${version}"
@@ -71,7 +71,7 @@ stdenv.mkDerivation {
     done
   '' + postFixup;
 
-  passthru = { inherit info src pip; };
+  passthru = { inherit info src pip pythonScope; };
 
   meta = with stdenv.lib; {
     platforms = platforms.all;

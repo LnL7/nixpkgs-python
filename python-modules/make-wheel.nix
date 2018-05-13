@@ -1,4 +1,4 @@
-{ pkgs, stdenv, unzip, python, pip, pythonPlatform, mkPythonInfo }:
+{ pkgs, stdenv, unzip, python, pip, pythonPlatform, pythonScope, mkPythonInfo }:
 
 let
   isZip = src: builtins.any (stdenv.lib.hasSuffix ".zip") (src.urls or [src]);
@@ -44,7 +44,7 @@ stdenv.mkDerivation (attr // {
     runHook postInstall
   '';
 
-  passthru = { inherit info pip; };
+  passthru = { inherit info pip pythonScope; };
 
   meta = with stdenv.lib; {
     platforms = platforms.all;

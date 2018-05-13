@@ -23,11 +23,13 @@ let
   mkPythonWheel = pkgs.callPackage ./make-wheel.nix {
     inherit pip;
     inherit (self) python pythonPlatform mkPythonInfo;
+    pythonScope = self;
   };
 
   mkPythonDerivation = pkgs.callPackage ./generic-builder.nix {
     inherit pip;
     inherit (self) python pythonPlatform mkPythonWheel;
+    pythonScope = self;
   };
 
   mkPythonEnv = pkgs.callPackage ./make-python.nix {
