@@ -10,6 +10,8 @@
 */
 
 let
+  pythonng = import ./pythonng-overlay.nix;
+
   overlay = self: super: {
     pythonng = super.recurseIntoAttrs super.pythonng;
   };
@@ -25,7 +27,7 @@ in
   # Attributes passed to nixpkgs. Don't build packages marked as unfree.
 , nixpkgsArgs ? {
     config = { allowUnfree = false; inHydra = true; };
-    overlays = [ (import ./pythonng-overlay.nix) overlay ];
+    overlays = [ pythonng overlay ];
   }
 }:
 
