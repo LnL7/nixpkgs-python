@@ -18,13 +18,13 @@ let
 in
 
 {
-  pythonng = {
-    interpreter = recurseIntoAttrs {
+  pythonng = super.pythonng or {} // {
+    interpreter = super.pythonng.interpreter or {} // recurseIntoAttrs {
       cpython27 = pythonng.packages.cpython27.python;
       cpython36 = pythonng.packages.cpython36.python;
     };
 
-    packages = recurseIntoAttrs {
+    packages = super.pythonng.packages or {} // recurseIntoAttrs {
       cpython27 = recurseIntoAttrs (callPackage ./python-modules {
         interpreterConfig = import ./python-modules/configuration-2.7.nix;
         python = super.python27;
