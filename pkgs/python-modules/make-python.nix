@@ -23,9 +23,11 @@ let
           fi
       done
     '';
+
+    passthru = {
+      inherit (python) pip;
+      mkDerivation = python.mkDerivation.override { python = self; };
+    };
   };
 in
-
-self // {
-  mkDerivation = python.mkDerivation.override { python = self; };
-}
+  self

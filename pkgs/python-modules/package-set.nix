@@ -48,6 +48,7 @@ packageSet { inherit pkgs callPackage; } self // {
   inherit callPackage pythonPlatform mkPythonInfo mkPythonWheel mkPythonDerivation mkPythonEnv mkShellEnv;
 
   python = python // {
+    inherit pip;
     mkDerivation = self.mkPythonDerivation;
   };
 

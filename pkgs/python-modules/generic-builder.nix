@@ -75,7 +75,7 @@ stdenv.mkDerivation {
     done
   '' + postFixup;
 
-  passthru = { inherit info src pip pythonScope; };
+  passthru = { inherit info src pythonScope; };
 
   meta = with stdenv.lib; {
     platforms = platforms.all;

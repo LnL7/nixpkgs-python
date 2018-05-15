@@ -44,7 +44,7 @@ stdenv.mkDerivation (attr // {
     runHook postInstall
   '';
 
-  passthru = { inherit info pip pythonScope; };
+  passthru = { inherit info pythonScope; };
 
   meta = with stdenv.lib; {
     platforms = platforms.all;
