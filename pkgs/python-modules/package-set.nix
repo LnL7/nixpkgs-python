@@ -15,12 +15,12 @@ let
     then pythonCallPackage
     else stdenv.lib.callPackageWith defaultScope;
 
-  mkPythonInfo = pkgs.callPackage ./make-info.nix {
+  mkPythonInfo = pkgs.callPackage ./info-builder.nix {
     inherit pip;
     inherit (self) python pythonPlatform;
   };
 
-  mkPythonWheel = pkgs.callPackage ./make-wheel.nix {
+  mkPythonWheel = pkgs.callPackage ./wheel-builder.nix {
     inherit pip;
     inherit (self) python pythonPlatform mkPythonInfo;
     pythonScope = self;
