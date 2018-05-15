@@ -11,7 +11,7 @@
 let
   inherit (stdenv.lib) extends makeExtensible;
 
-  pip = callPackage ./pip.nix {
+  pip = callPackage ./pip {
     inherit python pythonPlatform;
   };
 

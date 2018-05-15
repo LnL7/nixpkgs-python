@@ -1,4 +1,4 @@
-{ pkgs, stdenv, coreutils, python, pip, pythonPlatform, pythonScope, mkPythonWheel }:
+{ pkgs, stdenv, coreutils, python, pip, pythonPlatform, pythonScope, pipHook, mkPythonWheel }:
 
 let
   checkPython = stdenv.lib.any (x: stdenv.lib.matchAttrs x pythonPlatform);
@@ -11,6 +11,7 @@ in
 , wheel ? mkPythonWheel (builtins.removeAttrs attr ["wheel"])
 , pipFlags ? [], pipInstallFlags ? [ "--ignore-installed" ]
 , systemDepends ? [], pythonDepends ? []
+, nativeBuildInputs ? [], propagatedNativeBuildInputs ? []
 , buildInputs ? [], propagatedBuildInputs ? []
 , postFixup ? ""
 , ... }@attr:
@@ -23,6 +24,7 @@ stdenv.mkDerivation {
   pipFlags = [ "--isolated" "--no-cache-dir" "--disable-pip-version-check" ] ++ pipFlags;
   pipInstallFlags = [ "--no-deps" "--no-index" ] ++ pipInstallFlags;
 
+  nativeBuildInputs = [ pipHook ] ++ nativeBuildInputs;
   buildInputs = [ pip ] ++ buildInputs;
   propagatedBuildInputs = [ python ] ++ systemDepends ++ propagatedBuildInputs;
 
@@ -62,8 +64,6 @@ stdenv.mkDerivation {
     done
 
     rm -rf $out/bin/__pycache__
-
-    PYTHONPATH=$out/${pythonPlatform.sitePackages} pip check $pipFlags
 
     runHook postInstall
   '';

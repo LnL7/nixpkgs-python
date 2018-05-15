@@ -1,4 +1,4 @@
-{ pkgs, stdenv, python, pip, virtualenv, pythonPlatform
+{ pkgs, stdenv, makeSetupHook, python, pip, virtualenv, pythonPlatform
 , pythonCallPackage ? null
 , packageSet
 }:
@@ -15,6 +15,10 @@ let
     then pythonCallPackage
     else stdenv.lib.callPackageWith defaultScope;
 
+  pipHook = makeSetupHook
+    { substitutions = { inherit (pythonPlatform) pip sitePackages; }; }
+    ./pip/setup-hook.sh;
+
   mkPythonInfo = pkgs.callPackage ./info-builder.nix {
     inherit pip;
     inherit (self) python pythonPlatform;
@@ -28,7 +32,7 @@ let
 
   mkPythonDerivation = pkgs.callPackage ./generic-builder.nix {
     inherit pip;
-    inherit (self) python pythonPlatform mkPythonWheel;
+    inherit (self) python pythonPlatform pipHook mkPythonWheel;
     pythonScope = self;
   };
 
@@ -45,7 +49,8 @@ let
 in
 
 packageSet { inherit pkgs callPackage; } self // {
-  inherit callPackage pythonPlatform mkPythonInfo mkPythonWheel mkPythonDerivation mkPythonEnv mkShellEnv;
+  inherit callPackage pipHook pythonPlatform;
+  inherit mkPythonInfo mkPythonWheel mkPythonDerivation mkPythonEnv mkShellEnv;
 
   python = python // {
     inherit pip;

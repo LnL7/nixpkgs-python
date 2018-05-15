@@ -13,7 +13,7 @@ in
 
 stdenv.mkDerivation (attr // {
   inherit name;
-  nix_setup = ./nix_setup.py;
+  nix_setup = ./pip/setup.py;
 
   nativeBuildInputs = stdenv.lib.optional (isZip src) unzip
     ++ nativeBuildInputs;
