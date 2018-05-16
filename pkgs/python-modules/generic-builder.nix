@@ -33,15 +33,6 @@ stdenv.mkDerivation {
   installPhase = ''
     runHook preInstall
 
-    # Determinism: The interpreter is patched to write null timestamps when compiling python files.
-    # This way python doesn't try to update them when we freeze timestamps in nix store.
-    export DETERMINISTIC_BUILD=1;
-    # Determinism: We fix the hashes of str, bytes and datetime objects.
-    export PYTHONHASHSEED=0;
-    # Determinism. Whenever Python is included, it should not check user site-packages.
-    # This option is only relevant when the sandbox is disabled.
-    export PYTHONNOUSERSITE=1;
-
     ${pythonPlatform.pip} install '${pname}==${version}' $pipFlags $pipInstallFlags --find-links ./dist --prefix $out
 
     for dep in $pythonDepends; do
