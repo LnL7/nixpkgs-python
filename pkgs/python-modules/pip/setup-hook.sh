@@ -8,10 +8,10 @@ export PYTHONHASHSEED=0;
 export PYTHONNOUSERSITE=1;
 
 
-declare -a pipFlagsArray=(--isolated --no-cache-dir --disable-pip-version-check)
-declare -a pipCheckFlagsArray
-declare -a pipInstallFlagsArray=(--no-deps --no-index --ignore-installed)
-declare -a pipWheelFlagsArray=(--no-deps --no-index)
+declare -ga pipFlagsArray=(--isolated --no-cache-dir --disable-pip-version-check)
+declare -ga pipCheckFlagsArray=()
+declare -ga pipInstallFlagsArray=(--no-deps --no-index --ignore-installed)
+declare -ga pipWheelFlagsArray=(--no-deps --no-index)
 
 
 pipCheckPhase() {
@@ -25,6 +25,7 @@ pipCheckPhase() {
       $pipCheckFlags ${pipCheckFlagsArray+"${pipCheckFlagsArray[@]}"}
     )
 
+    echoCmd '@pip@ check flags' ${flagsArray+"${flagsArray[@]}"}
     PYTHONPATH=$out/@sitePackages@ @pip@ check ${flagsArray+"${flagsArray[@]}"}
 
     runHook postPipCheck
@@ -46,7 +47,10 @@ pipInstallPhase() {
       $pipInstallFlags ${pipInstallFlagsArray+"${pipInstallFlagsArray[@]}"}
     )
 
-    @pip@ install ${flagsArray+"${flagsArray[@]}"} --prefix $out
+    flagsArray+=(--prefix $out)
+
+    echoCmd '@pip@ install flags' ${flagsArray+"${flagsArray[@]}"}
+    @pip@ install ${flagsArray+"${flagsArray[@]}"}
 
     runHook postPipInstall
 }
@@ -63,7 +67,8 @@ pipWheelPhase() {
       $pipWheelFlags ${pipWheelFlagsArray+"${pipWheelFlagsArray[@]}"}
     )
 
-    @pip@ wheel . ${flagsArray+"${flagsArray[@]}"}
+    echoCmd '@pip@ wheel flags' "${flagsArray[@]}"
+    @pip@ wheel . "${flagsArray[@]}"
 
     runHook postPipWheel
 }
