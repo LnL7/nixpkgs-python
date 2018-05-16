@@ -9,6 +9,7 @@ in
 , meta ? {}
 , info ? wheel.info
 , wheel ? mkPythonWheel (builtins.removeAttrs attr ["wheel"])
+, dontPipCheck ? false, pipCheckFlags ? []
 , pipFlags ? [], pipInstallFlags ? [ "--ignore-installed" ]
 , systemDepends ? [], pythonDepends ? []
 , nativeBuildInputs ? [], propagatedNativeBuildInputs ? []
@@ -21,6 +22,7 @@ stdenv.mkDerivation {
   inherit systemDepends pythonDepends;
   src = wheel;
 
+  inherit dontPipCheck pipCheckFlags;
   pipFlags = [ "--isolated" "--no-cache-dir" "--disable-pip-version-check" ] ++ pipFlags;
   pipInstallFlags = [ "--no-deps" "--no-index" ] ++ pipInstallFlags;
 

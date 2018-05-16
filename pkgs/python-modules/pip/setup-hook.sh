@@ -18,4 +18,6 @@ pipCheckPhase() {
     runHook postPipCheck
 }
 
-preFixupPhases+=pipCheckPhase
+if [ -z "${dontPipCheck:-}" ]; then
+    preFixupPhases+=pipCheckPhase
+fi
