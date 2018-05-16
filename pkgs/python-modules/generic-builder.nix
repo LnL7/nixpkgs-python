@@ -31,8 +31,8 @@ stdenv.mkDerivation ({
   src = wheel;
 
   nativeBuildInputs = [ pipHook ] ++ nativeBuildInputs;
-  buildInputs = [ pip ] ++ buildInputs;
-  propagatedBuildInputs = [ python ] ++ systemDepends ++ propagatedBuildInputs;
+  buildInputs = [ pip ] ++ systemDepends ++ pythonDepends ++ buildInputs;
+  propagatedBuildInputs = [ python ] ++ propagatedBuildInputs;
 
   installPhase = ''
     runHook preInstall
