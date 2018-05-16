@@ -225,6 +225,13 @@ for spec in args.package_spec:
         if data:
             python_deps = [x for x in python_deps if x not in data]
             python_deps.extend(data)
+            for dep in data:
+                if isinstance(dep, str):
+                    pass
+                elif 'optional' in dep:
+                    python_conditional_deps.append(dep['optional'])
+                elif 'optionals' in dep:
+                    python_conditional_deps.extend(dep['optionals'])
         data = pkg_overrides.pop('meta', None)
         if data:
             meta.update(data)
