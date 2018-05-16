@@ -1,1 +1,1 @@
-{"systemDepends":["cyrus_sasl","openldap"]}
+{"systemDepends":["cyrus_sasl","openldap"],"NIX_CFLAGS_COMPILE":"-I${cyrus_sasl.dev}/include/sasl"}
