@@ -17,6 +17,7 @@ in
 , buildPhase ? "", preBuild ? "", postBuild ? ""
 , distPhase ? "", preDist ? "", postDist ? ""
 , hardeningDisable ? []
+, NIX_CFLAGS_COMPILE ? "", NIX_CFLAGS_LINK ? "", NIX_LDFLAGS ? ""
 , ... }@attrs:
 
 stdenv.mkDerivation ({
@@ -56,21 +57,24 @@ stdenv.mkDerivation ({
     platforms = platforms.all;
   } // meta;
 }
-// optionalAttrs (unpackPhase != "")      { inherit unpackPhase; }
-// optionalAttrs (preUnpack != "")        { inherit preUnpack; }
-// optionalAttrs (postUnpack != "")       { inherit postUnpack; }
-// optionalAttrs (patches != [])          { inherit patches; }
-// optionalAttrs (patchPhase != "")       { inherit patchPhase; }
-// optionalAttrs (prePatch != "")         { inherit prePatch; }
-// optionalAttrs (postPatch != "")        { inherit postPatch; }
-// optionalAttrs (configurePhase != "")   { inherit configurePhase; }
-// optionalAttrs (preConfigure != "")     { inherit preConfigure; }
-// optionalAttrs (postConfigure != "")    { inherit postConfigure; }
-// optionalAttrs (buildPhase != "")       { inherit buildPhase; }
-// optionalAttrs (preBuild != "")         { inherit preBuild; }
-// optionalAttrs (postBuild != "")        { inherit postBuild; }
-// optionalAttrs (distPhase != "")        { inherit distPhase; }
-// optionalAttrs (preDist != "")          { inherit preDist; }
-// optionalAttrs (postDist != "")         { inherit postDist; }
-// optionalAttrs (hardeningDisable != []) { inherit hardeningDisable; }
+// optionalAttrs (unpackPhase != "")        { inherit unpackPhase; }
+// optionalAttrs (preUnpack != "")          { inherit preUnpack; }
+// optionalAttrs (postUnpack != "")         { inherit postUnpack; }
+// optionalAttrs (patches != [])            { inherit patches; }
+// optionalAttrs (patchPhase != "")         { inherit patchPhase; }
+// optionalAttrs (prePatch != "")           { inherit prePatch; }
+// optionalAttrs (postPatch != "")          { inherit postPatch; }
+// optionalAttrs (configurePhase != "")     { inherit configurePhase; }
+// optionalAttrs (preConfigure != "")       { inherit preConfigure; }
+// optionalAttrs (postConfigure != "")      { inherit postConfigure; }
+// optionalAttrs (buildPhase != "")         { inherit buildPhase; }
+// optionalAttrs (preBuild != "")           { inherit preBuild; }
+// optionalAttrs (postBuild != "")          { inherit postBuild; }
+// optionalAttrs (distPhase != "")          { inherit distPhase; }
+// optionalAttrs (preDist != "")            { inherit preDist; }
+// optionalAttrs (postDist != "")           { inherit postDist; }
+// optionalAttrs (hardeningDisable != [])   { inherit hardeningDisable; }
+// optionalAttrs (NIX_CFLAGS_COMPILE != "") { inherit NIX_CFLAGS_COMPILE; }
+// optionalAttrs (NIX_CFLAGS_LINK != "")    { inherit NIX_CFLAGS_LINK; }
+// optionalAttrs (NIX_LDFLAGS != "")        { inherit NIX_LDFLAGS; }
 )
