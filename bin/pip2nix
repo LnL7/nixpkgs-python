@@ -292,9 +292,9 @@ for spec in args.package_spec:
 
     meta_expr = ''
     if meta.get('description'):
-        meta_expr += '\n         description = "%s";' % meta['description']
+        meta_expr += '\n         description = %s;' % json.dumps(meta['description'])
     if meta.get('homepage'):
-        meta_expr += '\n         homepage = "%s";' % meta['homepage']
+        meta_expr += '\n         homepage = %s;' % json.dumps(meta['homepage'])
     if meta.get('license'):
         meta_expr += '\n         license = licenses.%s;' % meta['license']
     if meta.get('platforms'):
