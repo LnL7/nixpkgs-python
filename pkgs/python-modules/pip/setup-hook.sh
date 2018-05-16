@@ -11,6 +11,7 @@ export PYTHONNOUSERSITE=1;
 declare -a pipFlagsArray=(--isolated --no-cache-dir --disable-pip-version-check)
 declare -a pipCheckFlagsArray
 declare -a pipInstallFlagsArray=(--no-deps --no-index --ignore-installed)
+declare -a pipWheelFlagsArray=(--no-deps --no-index)
 
 
 pipCheckPhase() {
@@ -48,4 +49,21 @@ pipInstallPhase() {
     @pip@ install ${flagsArray+"${flagsArray[@]}"} --prefix $out
 
     runHook postPipInstall
+}
+
+
+pipWheelPhase() {
+    runHook prePipWheel
+
+    : ${pipFlags=}
+    : ${pipWheelFlags=}
+
+    local -a flagsArray=(
+      $pipFlags ${pipFlagsArray+"${pipFlagsArray[@]}"}
+      $pipWheelFlags ${pipWheelFlagsArray+"${pipWheelFlagsArray[@]}"}
+    )
+
+    @pip@ wheel . ${flagsArray+"${flagsArray[@]}"}
+
+    runHook postPipWheel
 }

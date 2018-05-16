@@ -26,7 +26,7 @@ let
 
   mkPythonWheel = pkgs.callPackage ./wheel-builder.nix {
     inherit pip;
-    inherit (self) python pythonPlatform mkPythonInfo;
+    inherit (self) python pythonPlatform pipHook mkPythonInfo;
     pythonScope = self;
   };
 

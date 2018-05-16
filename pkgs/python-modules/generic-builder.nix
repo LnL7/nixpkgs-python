@@ -1,6 +1,7 @@
 { pkgs, stdenv, coreutils, python, pip, pythonPlatform, pythonScope, pipHook, mkPythonWheel }:
 
 let
+  inherit (stdenv.lib) optionalAttrs;
   checkPython = stdenv.lib.any (x: stdenv.lib.matchAttrs x pythonPlatform);
 in
 
@@ -8,26 +9,26 @@ in
 , name ? "python${pythonPlatform.version}-${pname}-${version}"
 , meta ? {}
 , info ? wheel.info
-, wheel ? mkPythonWheel (builtins.removeAttrs attr ["wheel"])
+, wheel ? mkPythonWheel attrs
+, systemDepends ? [], pythonDepends ? []
 , pipFlags ? []
 , dontPipCheck ? false, pipCheckFlags ? []
 , pipInstallFlags ? [ "${pname}==${version}" "--find-links" "./dist" ]
-, systemDepends ? [], pythonDepends ? []
 , nativeBuildInputs ? [], propagatedNativeBuildInputs ? []
 , buildInputs ? [], propagatedBuildInputs ? []
 , pipCheckPhase ? "", prePipCheck ? "", postPipCheck ? ""
 , pipInstallPhase ? "", prePipInstall ? "", postPipInstall ? ""
-, postFixup ? ""
-, ... }@attr:
+, doCheck ? false
+, installPhase ? "", preInstall ? "", postInstall ? ""
+, checkPhase ? "", preCheck ? "", postCheck ? ""
+, fixupPhase ? "", preFixup ? "", postFixup ? ""
+, ... }@attrs:
 
-stdenv.mkDerivation {
+stdenv.mkDerivation ({
   inherit name pname version wheel;
+  inherit pipFlags pipCheckFlags pipInstallFlags;
   inherit systemDepends pythonDepends;
   src = wheel;
-
-  inherit pipFlags;
-  inherit dontPipCheck pipCheckFlags pipCheckPhase prePipCheck postPipCheck;
-  inherit pipInstallFlags pipInstallPhase prePipInstall postPipInstall;
 
   nativeBuildInputs = [ pipHook ] ++ nativeBuildInputs;
   buildInputs = [ pip ] ++ buildInputs;
@@ -78,3 +79,21 @@ stdenv.mkDerivation {
     broken = !checkPython (meta.python or [{}]);
   } // meta;
 }
+// optionalAttrs (dontPipCheck)          { inherit dontPipCheck; }
+// optionalAttrs (pipCheckPhase != "")   { inherit pipCheckPhase; }
+// optionalAttrs (prePipCheck != "")     { inherit prePipCheck; }
+// optionalAttrs (postPipCheck != "")    { inherit postPipCheck; }
+// optionalAttrs (pipInstallPhase != "") { inherit pipInstallPhase; }
+// optionalAttrs (prePipInstall != "")   { inherit prePipInstall; }
+// optionalAttrs (postPipInstall != "")  { inherit postPipInstall; }
+// optionalAttrs (doCheck)               { inherit doCheck; }
+// optionalAttrs (checkPhase != "")      { inherit checkPhase; }
+// optionalAttrs (preCheck != "")        { inherit preCheck; }
+// optionalAttrs (postCheck != "")       { inherit postCheck; }
+// optionalAttrs (installPhase != "")    { inherit installPhase; }
+// optionalAttrs (preInstall != "")      { inherit preInstall; }
+// optionalAttrs (postInstall != "")     { inherit postInstall; }
+// optionalAttrs (fixupPhase != "")      { inherit fixupPhase; }
+// optionalAttrs (preFixup != "")        { inherit preFixup; }
+#  optionalAttrs (postFixup != "")       { }
+)
