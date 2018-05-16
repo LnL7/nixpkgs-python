@@ -236,6 +236,7 @@ for spec in args.package_spec:
         if data:
             meta.update(data)
         pkg.update(pkg_overrides)
+        pkg_overrides.pop('callPackage', None)
 
     system_deps += [x for x in args.system_depends if x not in system_deps]
     pkg['systemDepends'] = system_deps
@@ -284,11 +285,14 @@ for spec in args.package_spec:
 
     inputs_expr = ', '.join(inputs)
 
-    depends_expr = ''
+    attrs_expr = ''
     if system_expr:
-        depends_expr += '\n       systemDepends = %s;' % system_expr
+        attrs_expr += '\n       systemDepends = %s;' % system_expr
     if python_expr:
-        depends_expr += '\n       pythonDepends = %s;' % python_expr
+        attrs_expr += '\n       pythonDepends = %s;' % python_expr
+
+    for k, v in pkg_overrides.items():
+        attrs_expr += '\n       %s = %s;' % (k, json.dumps(v))
 
     meta_expr = ''
     if meta.get('description'):
@@ -310,7 +314,7 @@ for spec in args.package_spec:
             call_args.append('inherit (%s) %s;' % (arg['expr'], ' '.join(arg['inherit'])))
     call_expr = ' \n          '.join(call_args)
 
-    data = {'attr': attr, 'inputs_expr': inputs_expr, 'depends_expr': depends_expr, 'meta_expr': meta_expr, 'call_expr': call_expr}
+    data = {'attr': attr, 'inputs_expr': inputs_expr, 'attrs_expr': attrs_expr, 'meta_expr': meta_expr, 'call_expr': call_expr}
     data.update(pkg)
     data.update(src)
     data.update(meta)
@@ -324,7 +328,7 @@ for spec in args.package_spec:
        src = fetchurl {
          url = "%(url)s";
          sha256 = "%(sha256)s";
-       };%(depends_expr)s
+       };%(attrs_expr)s
        meta = with stdenv.lib; {%(meta_expr)s
        };
      }) {%(call_expr)s };""" % data
