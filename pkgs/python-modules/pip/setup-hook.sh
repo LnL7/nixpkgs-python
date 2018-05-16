@@ -10,6 +10,7 @@ export PYTHONNOUSERSITE=1;
 
 declare -a pipFlagsArray=(--isolated --no-cache-dir --disable-pip-version-check)
 declare -a pipCheckFlagsArray
+declare -a pipInstallFlagsArray=(--no-deps --no-index --ignore-installed)
 
 
 pipCheckPhase() {
@@ -31,3 +32,20 @@ pipCheckPhase() {
 if [ -z "${dontPipCheck:-}" ]; then
     preFixupPhases+=pipCheckPhase
 fi
+
+
+pipInstallPhase() {
+    runHook prePipInstall
+
+    : ${pipFlags=}
+    : ${pipInstallFlags=}
+
+    local -a flagsArray=(
+      $pipFlags ${pipFlagsArray+"${pipFlagsArray[@]}"}
+      $pipInstallFlags ${pipInstallFlagsArray+"${pipInstallFlagsArray[@]}"}
+    )
+
+    @pip@ install ${flagsArray+"${flagsArray[@]}"} --prefix $out
+
+    runHook postPipInstall
+}

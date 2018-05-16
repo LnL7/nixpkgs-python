@@ -9,11 +9,14 @@ in
 , meta ? {}
 , info ? wheel.info
 , wheel ? mkPythonWheel (builtins.removeAttrs attr ["wheel"])
+, pipFlags ? []
 , dontPipCheck ? false, pipCheckFlags ? []
-, pipFlags ? [], pipInstallFlags ? [ "--ignore-installed" ]
+, pipInstallFlags ? [ "${pname}==${version}" "--find-links" "./dist" ]
 , systemDepends ? [], pythonDepends ? []
 , nativeBuildInputs ? [], propagatedNativeBuildInputs ? []
 , buildInputs ? [], propagatedBuildInputs ? []
+, pipCheckPhase ? "", prePipCheck ? "", postPipCheck ? ""
+, pipInstallPhase ? "", prePipInstall ? "", postPipInstall ? ""
 , postFixup ? ""
 , ... }@attr:
 
@@ -22,9 +25,9 @@ stdenv.mkDerivation {
   inherit systemDepends pythonDepends;
   src = wheel;
 
-  inherit dontPipCheck pipCheckFlags;
-  pipFlags = [ "--isolated" "--no-cache-dir" "--disable-pip-version-check" ] ++ pipFlags;
-  pipInstallFlags = [ "--no-deps" "--no-index" ] ++ pipInstallFlags;
+  inherit pipFlags;
+  inherit dontPipCheck pipCheckFlags pipCheckPhase prePipCheck postPipCheck;
+  inherit pipInstallFlags pipInstallPhase prePipInstall postPipInstall;
 
   nativeBuildInputs = [ pipHook ] ++ nativeBuildInputs;
   buildInputs = [ pip ] ++ buildInputs;
@@ -33,7 +36,7 @@ stdenv.mkDerivation {
   installPhase = ''
     runHook preInstall
 
-    ${pythonPlatform.pip} install '${pname}==${version}' $pipFlags $pipInstallFlags --find-links ./dist --prefix $out
+    pipInstallPhase
 
     for dep in $pythonDepends; do
         for f in $dep/${pythonPlatform.sitePackages}/*; do
