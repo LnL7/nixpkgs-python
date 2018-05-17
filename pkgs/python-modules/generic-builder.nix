@@ -8,6 +8,7 @@ in
 { pname, version, src ? null
 , name ? "python${pythonPlatform.version}-${pname}-${version}"
 , meta ? {}
+, passthru ? {}
 , info ? wheel.info
 , wheel ? mkPythonWheel attrs
 , systemDepends ? [], pythonDepends ? []
@@ -18,9 +19,13 @@ in
 , buildInputs ? [], propagatedBuildInputs ? []
 , pipCheckPhase ? "", prePipCheck ? "", postPipCheck ? ""
 , pipInstallPhase ? "", prePipInstall ? "", postPipInstall ? ""
+, outputs ? [ "out" ]
 , doCheck ? false
-, installPhase ? "", preInstall ? "", postInstall ? ""
+, doInstallCheck ? false
+, dontPatchShebangs ? false
 , checkPhase ? "", preCheck ? "", postCheck ? ""
+, installPhase ? "", preInstall ? "", postInstall ? ""
+, installCheckPhase ? "", preInstallCheck ? "", postInstallCheck ? ""
 , fixupPhase ? "", preFixup ? "", postFixup ? ""
 , ... }@attrs:
 
@@ -72,28 +77,34 @@ stdenv.mkDerivation ({
     done
   '' + postFixup;
 
-  passthru = { inherit info src pythonScope; };
+  passthru = { inherit info src pythonScope; } // passthru;
 
   meta = with stdenv.lib; {
     platforms = platforms.all;
     broken = !checkPython (meta.python or [{}]);
   } // meta;
 }
-// optionalAttrs (dontPipCheck)          { inherit dontPipCheck; }
-// optionalAttrs (pipCheckPhase != "")   { inherit pipCheckPhase; }
-// optionalAttrs (prePipCheck != "")     { inherit prePipCheck; }
-// optionalAttrs (postPipCheck != "")    { inherit postPipCheck; }
-// optionalAttrs (pipInstallPhase != "") { inherit pipInstallPhase; }
-// optionalAttrs (prePipInstall != "")   { inherit prePipInstall; }
-// optionalAttrs (postPipInstall != "")  { inherit postPipInstall; }
-// optionalAttrs (doCheck)               { inherit doCheck; }
-// optionalAttrs (checkPhase != "")      { inherit checkPhase; }
-// optionalAttrs (preCheck != "")        { inherit preCheck; }
-// optionalAttrs (postCheck != "")       { inherit postCheck; }
-// optionalAttrs (installPhase != "")    { inherit installPhase; }
-// optionalAttrs (preInstall != "")      { inherit preInstall; }
-// optionalAttrs (postInstall != "")     { inherit postInstall; }
-// optionalAttrs (fixupPhase != "")      { inherit fixupPhase; }
-// optionalAttrs (preFixup != "")        { inherit preFixup; }
-#  optionalAttrs (postFixup != "")       { }
+// optionalAttrs (dontPipCheck)            { inherit dontPipCheck; }
+// optionalAttrs (pipCheckPhase != "")     { inherit pipCheckPhase; }
+// optionalAttrs (prePipCheck != "")       { inherit prePipCheck; }
+// optionalAttrs (postPipCheck != "")      { inherit postPipCheck; }
+// optionalAttrs (pipInstallPhase != "")   { inherit pipInstallPhase; }
+// optionalAttrs (prePipInstall != "")     { inherit prePipInstall; }
+// optionalAttrs (postPipInstall != "")    { inherit postPipInstall; }
+// optionalAttrs (outputs != ["out"])      { inherit outputs; }
+// optionalAttrs (doCheck)                 { inherit doCheck; }
+// optionalAttrs (doInstallCheck)          { inherit doInstallCheck; }
+// optionalAttrs (dontPatchShebangs)       { inherit dontPatchShebangs; }
+// optionalAttrs (checkPhase != "")        { inherit checkPhase; }
+// optionalAttrs (preCheck != "")          { inherit preCheck; }
+// optionalAttrs (postCheck != "")         { inherit postCheck; }
+// optionalAttrs (installPhase != "")      { inherit installPhase; }
+// optionalAttrs (preInstall != "")        { inherit preInstall; }
+// optionalAttrs (postInstall != "")       { inherit postInstall; }
+// optionalAttrs (installCheckPhase != "") { inherit installCheckPhase; }
+// optionalAttrs (preInstallCheck != "")   { inherit preInstallCheck; }
+// optionalAttrs (postInstallCheck != "")  { inherit postInstallCheck; }
+// optionalAttrs (fixupPhase != "")        { inherit fixupPhase; }
+// optionalAttrs (preFixup != "")          { inherit preFixup; }
+#  optionalAttrs (postFixup != "")         { }
 )
