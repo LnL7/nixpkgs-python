@@ -30,7 +30,7 @@ let
     , ... }@attrs:
 
     stdenv.mkDerivation ({
-      inherit name pname version wheel;
+      inherit name pname version;
       inherit pipFlags pipCheckFlags pipInstallFlags;
       inherit systemDepends pythonDepends;
       src = wheel;
@@ -78,7 +78,7 @@ let
       '' + postFixup;
 
       passthru = {
-        inherit info src pythonScope;
+        inherit info wheel src pythonScope;
         overrideAttrs = f: mkDerivation (attrs // (f attrs));
       } // passthru;
 
