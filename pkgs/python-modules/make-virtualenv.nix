@@ -38,7 +38,7 @@ mkShell {
     prefix=$PWD/venv
     profile=$prefix/nix-profile
 
-    addToSearchPath PATH $prefix/bin
+    PATH=$prefix/bin:$profile/bin:$PATH
 
     if ! test -e $profile; then
         ${virtualenv}/bin/virtualenv $prefix --no-download
