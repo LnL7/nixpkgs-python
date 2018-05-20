@@ -41,16 +41,21 @@ let
     pythonScope = self;
   };
 
+  mkPythonEnv = pkgs.callPackage ./make-environment.nix {
+    inherit (self) python pythonPlatform;
+    pythonScope = self;
+  };
+
   mkShellEnv = pkgs.callPackage ./make-virtualenv.nix {
     inherit virtualenv;
-    inherit (self) python pythonPlatform;
+    inherit (self) python pythonPlatform mkPythonEnv;
     pythonScope = self;
   };
 in
 
 packageSet { inherit pkgs callPackage; } self // {
   inherit callPackage pipHook pythonPlatform;
-  inherit mkPython mkPythonInfo mkPythonWheel mkPythonDerivation mkShellEnv;
+  inherit mkPython mkPythonInfo mkPythonWheel mkPythonDerivation mkPythonEnv mkShellEnv;
 
   python = python // {
     inherit pip;
