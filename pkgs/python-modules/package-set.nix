@@ -36,7 +36,7 @@ let
     pythonScope = self;
   };
 
-  mkPythonEnv = pkgs.callPackage ./make-python.nix {
+  mkPython = pkgs.callPackage ./make-python.nix {
     inherit (self) python pythonPlatform;
     pythonScope = self;
   };
@@ -50,14 +50,14 @@ in
 
 packageSet { inherit pkgs callPackage; } self // {
   inherit callPackage pipHook pythonPlatform;
-  inherit mkPythonInfo mkPythonWheel mkPythonDerivation mkPythonEnv mkShellEnv;
+  inherit mkPython mkPythonInfo mkPythonWheel mkPythonDerivation mkShellEnv;
 
   python = python // {
     inherit pip;
     mkDerivation = self.mkPythonDerivation;
   };
 
-  pythonWithPackages = withPackages: self.mkPythonEnv {
+  pythonWithPackages = withPackages: self.mkPython {
     inherit withPackages;
   };
 
