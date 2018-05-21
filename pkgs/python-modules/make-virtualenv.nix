@@ -1,10 +1,11 @@
-{ stdenv, mkShell, python, virtualenv, pythonPlatform, pythonScope, mkPythonEnv }:
+{ stdenv, mkShell, python, virtualenv, pythonPlatform, pythonScope, pipHook, mkPythonEnv }:
 
 { withPackages
 , pythonTools ? [], pythonDepends ? []
 , systemDepends ? []
 , buildInputs ? []
-, installHook ? "", pipFlags ? ""
+, pipFlags ? [], pipInstallFlags? []
+, installHook ? ""
 , shellHook ? ""
 }:
 
@@ -16,9 +17,12 @@ let
 in
 
 mkShell {
-  name = "${python.name}-shell-environment";
+  name = "${pythonPlatform.python}-shell-environment";
   inherit env pipFlags;
+  nativeBuildInputs = [ pipHook ];
   buildInputs = [ env ] ++ systemDepends ++ buildInputs;
+
+  dontPipPrefix = true;
 
   shellHook = ''
     prefix=$PWD/venv
@@ -31,15 +35,13 @@ mkShell {
         substituteInPlace $prefix/bin/activate \
             --replace '$VIRTUAL_ENV/bin' '$VIRTUAL_ENV/bin:$VIRTUAL_ENV/nix-profile/bin'
 
-        if [ -n "$pipFlags" ]; then
-            pip install $pipFlags -I --no-deps --disable-pip-version-check
-        fi
+        pipInstallPhase
         ${installHook}
     fi
 
     if test ${env} != "$(readlink $profile)"; then
         rm $profile 2> /dev/null || true
-        echo ${env}/${pythonPlatform.sitePackages} > $prefix/${pythonPlatform.sitePackages}/${env.name}.pth
+        echo ${env}/${pythonPlatform.sitePackages} > $prefix/${pythonPlatform.sitePackages}/nix-environment.pth
         nix-store -r ${env} --indirect --add-root $profile > /dev/null
     fi
 

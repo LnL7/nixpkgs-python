@@ -25,8 +25,14 @@ pipCheckPhase() {
       $pipCheckFlags ${pipCheckFlagsArray+"${pipCheckFlagsArray[@]}"}
     )
 
+    pipPrefix=${pipPrefix:-$prefix}
+
     echoCmd '@pip@ check flags' ${flagsArray+"${flagsArray[@]}"}
-    PYTHONPATH=$out/@sitePackages@ @pip@ check ${flagsArray+"${flagsArray[@]}"}
+    if [ -e "${pipPrefix:-}/@sitePackages@" ]; then
+        PYTHONPATH=${pipPrefix:-}/@sitePackages@ @pip@ check ${flagsArray+"${flagsArray[@]}"}
+    else
+        @pip@ check ${flagsArray+"${flagsArray[@]}"}
+    fi
 
     runHook postPipCheck
 }
@@ -47,7 +53,11 @@ pipInstallPhase() {
       $pipInstallFlags ${pipInstallFlagsArray+"${pipInstallFlagsArray[@]}"}
     )
 
-    flagsArray+=(--prefix $out)
+    pipPrefix=${pipPrefix:-$prefix}
+
+    if [ -z "${dontPipPrefix:-}" ]; then
+        flagsArray+=(--prefix "$pipPrefix")
+    fi
 
     echoCmd '@pip@ install flags' ${flagsArray+"${flagsArray[@]}"}
     @pip@ install ${flagsArray+"${flagsArray[@]}"}

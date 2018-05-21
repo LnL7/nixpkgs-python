@@ -9,7 +9,7 @@ let
 in
 
 buildEnv {
-  name = "${pythonPlatform.abi}-environment";
+  name = "${pythonPlatform.python}-environment";
   paths = pkgs ++ pythonDepends;
   pathsToLink = [ "/lib" ];
 

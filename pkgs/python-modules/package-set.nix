@@ -48,7 +48,7 @@ let
 
   mkShellEnv = pkgs.callPackage ./make-virtualenv.nix {
     inherit virtualenv;
-    inherit (self) python pythonPlatform mkPythonEnv;
+    inherit (self) python pythonPlatform pipHook mkPythonEnv;
     pythonScope = self;
   };
 in
