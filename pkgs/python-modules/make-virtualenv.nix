@@ -1,13 +1,13 @@
-{ stdenv, mkShell, python, virtualenv, pythonPlatform, pythonScope, virtualenvHook, mkPythonEnv }:
+{ stdenv, python, virtualenv, pythonPlatform, pythonScope, virtualenvHook, mkPythonEnv }:
 
 { withPackages
 , pythonTools ? [], pythonDepends ? []
 , systemDepends ? []
+, nativeBuildInputs ? []
 , buildInputs ? []
-, pipFlags ? [], pipInstallFlags? []
-, installHook ? ""
-, shellHook ? ""
-}:
+, installHook ? "", shellHook ? ""
+, ...
+}@attrs:
 
 let
   env = mkPythonEnv {
@@ -16,11 +16,30 @@ let
   };
 in
 
-mkShell {
-  name = "${pythonPlatform.python}-shell-environment";
-  inherit env pipFlags pipInstallFlags;
-  nativeBuildInputs = [ virtualenv virtualenvHook ];
+stdenv.mkDerivation (builtins.removeAttrs attrs ["withPackages"] // {
+  name = "${pythonPlatform.python}-virtualenv";
+  inherit env;
+  nativeBuildInputs = [ virtualenv virtualenvHook ] ++ nativeBuildInputs;
   buildInputs = [ env ] ++ systemDepends ++ buildInputs;
+
+  buildPhase = ''
+    virtualenvPrefix=''${virtualenvPrefix:-$PWD/venv}
+
+    virtualenvBuildPhase
+    virtualenvInstallPhase
+
+    echo ${env}/${pythonPlatform.sitePackages} > $virtualenvPrefix/${pythonPlatform.sitePackages}/nix-environment.pth
+    ln -sfn ${env} $virtualenvPrefix/nix-profile
+  '';
+
+  installPhase = ''
+    mv $virtualenvPrefix $out
+
+    deactivate
+    virtualenvPrefix=$out
+    virtualenvBuildPhase
+    source $out/bin/activate
+  '';
 
   shellHook = ''
     prefix=$PWD/venv
@@ -28,7 +47,6 @@ mkShell {
 
     if ! test -e $profile; then
         virtualenvBuildPhase
-        virtualenvInstallPhase
         ${installHook}
     fi
 
@@ -40,4 +58,4 @@ mkShell {
 
     ${shellHook}
   '';
-}
+})
