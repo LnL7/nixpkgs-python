@@ -1,4 +1,4 @@
-{ stdenv, mkShell, python, virtualenv, pythonPlatform, pythonScope, pipHook, mkPythonEnv }:
+{ stdenv, mkShell, python, virtualenv, pythonPlatform, pythonScope, virtualenvHook, mkPythonEnv }:
 
 { withPackages
 , pythonTools ? [], pythonDepends ? []
@@ -18,24 +18,17 @@ in
 
 mkShell {
   name = "${pythonPlatform.python}-shell-environment";
-  inherit env pipFlags;
-  nativeBuildInputs = [ pipHook ];
+  inherit env pipFlags pipInstallFlags;
+  nativeBuildInputs = [ virtualenv virtualenvHook ];
   buildInputs = [ env ] ++ systemDepends ++ buildInputs;
-
-  dontPipPrefix = true;
 
   shellHook = ''
     prefix=$PWD/venv
     profile=$prefix/nix-profile
 
-    PATH=$prefix/bin:$profile/bin:$PATH
-
     if ! test -e $profile; then
-        ${virtualenv}/bin/virtualenv $prefix --no-download
-        substituteInPlace $prefix/bin/activate \
-            --replace '$VIRTUAL_ENV/bin' '$VIRTUAL_ENV/bin:$VIRTUAL_ENV/nix-profile/bin'
-
-        pipInstallPhase
+        virtualenvBuildPhase
+        virtualenvInstallPhase
         ${installHook}
     fi
 

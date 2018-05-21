@@ -19,6 +19,10 @@ let
     { substitutions = { inherit (pythonPlatform) pip sitePackages; }; }
     ./pip/setup-hook.sh;
 
+  virtualenvHook = makeSetupHook
+    { deps = [ pipHook ]; }
+    ./virtualenv/setup-hook.sh;
+
   mkPythonInfo = pkgs.callPackage ./info-builder.nix {
     inherit pip;
     inherit (self) python pythonPlatform;
@@ -48,13 +52,13 @@ let
 
   mkShellEnv = pkgs.callPackage ./make-virtualenv.nix {
     inherit virtualenv;
-    inherit (self) python pythonPlatform pipHook mkPythonEnv;
+    inherit (self) python pythonPlatform virtualenvHook mkPythonEnv;
     pythonScope = self;
   };
 in
 
 packageSet { inherit pkgs callPackage; } self // {
-  inherit callPackage pipHook pythonPlatform;
+  inherit callPackage pipHook virtualenvHook pythonPlatform;
   inherit mkPython mkPythonInfo mkPythonWheel mkPythonDerivation mkPythonEnv mkShellEnv;
 
   python = python // {
