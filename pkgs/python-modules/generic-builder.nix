@@ -1,4 +1,4 @@
-{ pkgs, stdenv, coreutils, python, pip, pythonPlatform, pythonScope, pipHook, mkPythonWheel }:
+{ pkgs, stdenv, coreutils, python, pip, pythonPlatform, pythonScope, pipHook, mkShellEnv, mkPythonWheel }:
 
 let
   inherit (stdenv.lib) optionalAttrs;
@@ -10,6 +10,7 @@ let
     , meta ? {}
     , passthru ? {}
     , info ? wheel.info
+    , venv ? mkShellEnv attrs
     , wheel ? mkPythonWheel attrs
     , systemDepends ? [], pythonDepends ? []
     , pipFlags ? []
@@ -78,7 +79,7 @@ let
       '' + postFixup;
 
       passthru = {
-        inherit info wheel src pythonScope;
+        inherit info venv wheel src pythonScope;
         overrideAttrs = f: mkDerivation (attrs // (f attrs));
       } // passthru;
 

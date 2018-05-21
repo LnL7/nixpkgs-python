@@ -1,10 +1,12 @@
 { stdenv, python, virtualenv, pythonPlatform, pythonScope, virtualenvHook, mkPythonEnv }:
 
-{ withPackages
+{ src ? null
+, withPackages ? p: []
 , pythonTools ? [], pythonDepends ? []
 , systemDepends ? []
 , nativeBuildInputs ? []
 , buildInputs ? []
+, pipInstallFlags ? [ src ]
 , installHook ? "", shellHook ? ""
 , ...
 }@attrs:
@@ -17,10 +19,12 @@ let
 in
 
 stdenv.mkDerivation (builtins.removeAttrs attrs ["withPackages"] // {
-  name = "${pythonPlatform.python}-virtualenv";
-  inherit env;
+  name = "${pythonPlatform.python}-virtualenv-with-packages";
+  inherit env pipInstallFlags;
   nativeBuildInputs = [ virtualenv virtualenvHook ] ++ nativeBuildInputs;
   buildInputs = [ env ] ++ systemDepends ++ buildInputs;
+
+  SOURCE_DATE_EPOCH = "315532800";
 
   buildPhase = ''
     virtualenvPrefix=''${virtualenvPrefix:-$PWD/venv}
@@ -47,6 +51,7 @@ stdenv.mkDerivation (builtins.removeAttrs attrs ["withPackages"] // {
 
     if ! test -e $profile; then
         virtualenvBuildPhase
+        virtualenvInstallPhase
         ${installHook}
     fi
 

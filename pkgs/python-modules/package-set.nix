@@ -36,7 +36,7 @@ let
 
   mkPythonDerivation = pkgs.callPackage ./generic-builder.nix {
     inherit pip;
-    inherit (self) python pythonPlatform pipHook mkPythonWheel;
+    inherit (self) python pythonPlatform pipHook mkPythonWheel mkShellEnv;
     pythonScope = self;
   };
 
