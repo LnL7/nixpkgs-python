@@ -28,6 +28,16 @@ let
     python36 = ["python36"];
   };
 
+  fakeDerivation = outPath:
+    let
+      out = { inherit out dev outPath; };
+      bin = { inherit out bin dev lib man doc; outPath = "${outPath}.bin"; };
+      dev = { inherit out bin dev lib man doc; outPath = "${outPath}.dev"; };
+      lib = { inherit out bin dev lib man doc; outPath = "${outPath}.lib"; };
+      man = { inherit out bin dev lib man doc; outPath = "${outPath}.man"; };
+      doc = { inherit out bin dev lib man doc; outPath = "${outPath}.doc"; };
+    in out;
+
   fakeScope = {
     fetchurl = id;
     python = fakePython;
@@ -38,7 +48,7 @@ let
   };
 
   fakeCallPackage = f: attr:
-    mapAttrs (n: v: fakeScope.${n} or n) (builtins.functionArgs f);
+    mapAttrs (n: v: fakeScope.${n} or (fakeDerivation n)) (builtins.functionArgs f);
 
   pythonCallPackage = f: attr:
     if isFunction f
