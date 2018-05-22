@@ -23,6 +23,8 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--index-url', type=str,
                         default='https://pypi.org/simple',
                         help='URL of simple python package index')
+    parser.add_argument('-G', '--git-url', type=str,
+                        help='Generate expression using git source url')
     parser.add_argument('-S', '--system-depends', type=str, action='append', default=list(),
                         help='Extra system dependencies')
     parser.add_argument('-P', '--python-depends', type=str, action='append', default=list(),
@@ -130,22 +132,30 @@ for spec in args.package_spec:
         else:
             exit(1)
 
-    dist = loc.locate(req.requirement)
-    pkg = {'key': key, 'pname': dist.name.replace('-', '_'), 'version': dist.version}
-    sort_keys = {'whl': 10, 'zip': 1, 'gz': -1}
-    url, (digest_algo, digest) = sorted(dist.digests.items(), key=lambda item: sort_keys.get(item[0].rpartition('.')[2], 0))[0]
-    src = {'url': url, digest_algo: digest}
-    pkg['src'] = src
-
-    pkg_cache = cache.get('%s_%s' % (key, dist.version.replace('.', '_')))
-    if pkg_cache and digest == pkg_cache.get('src', {}).get(digest_algo, {}):
-        pkg_cache.update(pkg)
-        pkg = pkg_cache
+    if args.git_url:
+        pkg = {'pname': req.name, 'version': '0.0.0'}
+        output = subprocess.check_output(['git', 'ls-remote', args.git_url, 'HEAD'])
+        rev, _, _ = output.decode().partition('\t')
+        src = {'url': args.git_url, 'rev': rev}
+        pkg['src'] = src
+        pkg_cache = {}
     else:
-        if pkg_cache:
-            digest_cache = pkg_cache.get('src', {}).get(digest_algo)
-            print('warning: cache mismatch for %s' % req.requirement)
-        pkg_cache = None
+        dist = loc.locate(req.requirement)
+        pkg = {'key': key, 'pname': dist.name.replace('-', '_'), 'version': dist.version}
+        sort_keys = {'whl': 10, 'zip': 1, 'gz': -1}
+        url, (digest_algo, digest) = sorted(dist.digests.items(), key=lambda item: sort_keys.get(item[0].rpartition('.')[2], 0))[0]
+        src = {'url': url, digest_algo: digest}
+        pkg['src'] = src
+
+        pkg_cache = cache.get('%s_%s' % (key, dist.version.replace('.', '_')))
+        if pkg_cache and digest == pkg_cache.get('src', {}).get(digest_algo, {}):
+            pkg_cache.update(pkg)
+            pkg = pkg_cache
+        else:
+            if pkg_cache:
+                digest_cache = pkg_cache.get('src', {}).get(digest_algo)
+                print('warning: cache mismatch for %s' % req.requirement)
+            pkg_cache = None
 
     python_conditional_deps = []
     system_deps = pkg.get('systemDepends', [])
@@ -162,21 +172,25 @@ for spec in args.package_spec:
     if not args.no_dist_info and not pkg_cache:
         data = {}
         data.update(pkg)
-        data.update(src)
+        if args.git_url:
+            fetch_expr = 'builtins.fetchGit "%s"' % args.git_url
+        else:
+            fetch_expr = """fetchurl {
+       url = "%(url)s";
+       sha256 = "%(sha256)s";
+     }""" % src
+        data.update({'fetch_expr': fetch_expr})
         expr = """
-          with import ./. {};
+with import ./. {};
 
-          callPackage
-            ({ mkPythonInfo, fetchurl }:
-             mkPythonInfo {
-               pname = "%(pname)s";
-               version = "%(version)s";
-               src = fetchurl {
-                 url = "%(url)s";
-                 sha256 = "%(sha256)s";
-               };
-            }) {}
-        """ % data
+callPackage
+  ({ mkPythonInfo, fetchurl }:
+   mkPythonInfo {
+     pname = "%(pname)s";
+     version = "%(version)s";
+     src = %(fetch_expr)s;
+  }) {}
+""" % data
 
         try:
             output = subprocess.check_output(['nix-build', '-E', '-', '--no-out-link'], input=expr.encode())
@@ -188,6 +202,9 @@ for spec in args.package_spec:
 
         if os.path.exists('%s/metadata.json' % dist_info):
             meta = Metadata('%s/metadata.json' % dist_info)
+
+            if args.git_url:
+                pkg.update({'version': meta.version})
 
             run_requires = meta.dependencies.get('run_requires', [])
             # print(json.dumps(run_requires), file=sys.stderr)
@@ -250,7 +267,7 @@ for spec in args.package_spec:
         print(json.dumps(pkg))
         continue
 
-    attr = '%s_%s' % (key, dist.version.replace('.', '_'))
+    attr = '%s_%s' % (key, pkg['version'])
     inputs = ['python', 'pythonPlatform', 'stdenv', 'fetchurl']
 
     system_exprs = []
@@ -314,9 +331,21 @@ for spec in args.package_spec:
             call_args.append('inherit (%s) %s;' % (arg['expr'], ' '.join(arg['inherit'])))
     call_expr = ' \n          '.join(call_args)
 
-    data = {'attr': attr, 'inputs_expr': inputs_expr, 'attrs_expr': attrs_expr, 'meta_expr': meta_expr, 'call_expr': call_expr}
+    if args.git_url:
+        fetch_expr = """
+       builtins.fetchGit {
+         url = "%(url)s";
+         rev = "%(rev)s";
+       }""" % src
+    else:
+        fetch_expr = """
+       fetchurl {
+         url = "%(url)s";
+         sha256 = "%(sha256)s";
+       }""" % src
+
+    data = {'attr': attr, 'fetch_expr': fetch_expr, 'inputs_expr': inputs_expr, 'attrs_expr': attrs_expr, 'meta_expr': meta_expr, 'call_expr': call_expr}
     data.update(pkg)
-    data.update(src)
     data.update(meta)
 
     expr = """
@@ -325,10 +354,7 @@ for spec in args.package_spec:
      python.mkDerivation {
        pname = "%(pname)s";
        version = "%(version)s";
-       src = fetchurl {
-         url = "%(url)s";
-         sha256 = "%(sha256)s";
-       };%(attrs_expr)s
+       src = %(fetch_expr)s;%(attrs_expr)s
        meta = with stdenv.lib; {%(meta_expr)s
        };
      }) {%(call_expr)s };""" % data
@@ -336,7 +362,7 @@ for spec in args.package_spec:
     if not args.no_print_expr:
         print(expr)
     os.makedirs('cache/%s' % key, exist_ok=True)
-    with open('cache/%s/%s.nix' % (key, dist.version), 'w') as fd:
+    with open('cache/%s/%s.nix' % (key, pkg['version']), 'w') as fd:
         fd.write(expr)
 
 
