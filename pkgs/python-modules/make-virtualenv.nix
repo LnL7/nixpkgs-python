@@ -49,10 +49,13 @@ stdenv.mkDerivation (builtins.removeAttrs attrs ["withPackages"] // {
     prefix=$PWD/venv
     profile=$prefix/nix-profile
 
+    PATH=$prefix/bin:$profile/bin:$PATH
+
     if ! test -e $profile; then
         virtualenvBuildPhase
         virtualenvInstallPhase
         ${installHook}
+        deactivate
     fi
 
     if test ${env} != "$(readlink $profile)"; then
