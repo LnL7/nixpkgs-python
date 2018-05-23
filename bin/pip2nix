@@ -332,14 +332,12 @@ callPackage
     call_expr = ' \n          '.join(call_args)
 
     if args.git_url:
-        fetch_expr = """
-       builtins.fetchGit {
+        fetch_expr = """builtins.fetchGit {
          url = "%(url)s";
          rev = "%(rev)s";
        }""" % src
     else:
-        fetch_expr = """
-       fetchurl {
+        fetch_expr = """fetchurl {
          url = "%(url)s";
          sha256 = "%(sha256)s";
        }""" % src
