@@ -112,6 +112,11 @@ for path in args.requirement:
         args.package_spec.extend(fd.readlines())
 
 
+if args.git_url and len(args.package_spec) > 1:
+    print('error: --git-url not allowed with multiple packages')
+    exit(1)
+
+
 for spec in args.package_spec:
     spec, _, _ = spec.strip().partition('#')
     spec, _, _ = spec.strip().partition(';')
