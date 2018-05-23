@@ -128,8 +128,10 @@ for spec in args.package_spec:
         print('error: invalid requirement \'%s\'' % spec)
         exit(1)
     key = normalize_name(req.name)
+    _, _, version = spec.partition('==')
+    attr = '%s_%s' % (key, version.replace('.', '_'))
 
-    pkg_cache = cache.get(spec.replace('==', '_').replace('.', '_'))
+    pkg_cache = cache.get(attr)
     if args.print_cache:
         if pkg_cache:
             pkg = {'key': key}
@@ -181,6 +183,7 @@ for spec in args.package_spec:
                 pkg_overrides = json.load(fd)
 
     if not args.no_dist_info and not pkg_cache:
+        print('building info for %s' % key)
         data = {}
         data.update(pkg)
         if args.git_url:
