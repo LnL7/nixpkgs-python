@@ -148,6 +148,9 @@ for spec in args.package_spec:
     elif pkg_cache and not args.check:
         pkg = pkg_cache
         src = pkg_cache['src']
+        if isinstance(src, str):
+            # skip builtins.fetchGit
+            continue
     else:
         dist = loc.locate(req.requirement)
         pkg = {'key': key, 'pname': dist.name.replace('-', '_'), 'version': dist.version}
