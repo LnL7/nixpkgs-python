@@ -8,6 +8,11 @@ let
     isDarwin = "stdenv.isDarwin";
     isLinux = "stdenv.isLinux";
 
+    cc = stdenv.cc // {
+      isClang = "stdenv.cc.isClang";
+      isGNU = "stdenv.cc.isGNU";
+    };
+
     lib = stdenv.lib // {
       licenses = mapAttrs (n: v: n) stdenv.lib.licenses;
       platforms = mapAttrs (n: v: [n]) stdenv.lib.platforms;
