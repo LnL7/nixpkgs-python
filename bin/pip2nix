@@ -181,7 +181,10 @@ for spec in args.package_spec:
         data = {}
         data.update(pkg)
         if args.git_url:
-            fetch_expr = 'builtins.fetchGit "%s"' % args.git_url
+            fetch_expr = """builtins.fetchGit {
+       url = "%(url)s";
+       rev = "%(rev)s";
+     }""" % src
         else:
             fetch_expr = """fetchurl {
        url = "%(url)s";
