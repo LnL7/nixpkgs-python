@@ -3,12 +3,28 @@ set -e
 
 PATH="$(cd ${BASH_SOURCE[0]}/.. && pwd -P):$PATH"
 
+declare -a flagsArray=()
+
+while [ $# -gt 0 ]; do
+  i=$1; shift
+  case $i in
+    --)
+      break;;
+    *)
+      flagsArray+=("$i");;
+  esac
+done
+
 nix-instantiate --eval --strict --json -A pythonng.index \
   | jq -r '.[] | select(.pname) | [.pname, .version] | join("==")' \
   > pypi-requirements.txt
 
 pip2nix --no-print-expr -r pypi-requirements.txt "$@"
 rm pypi-requirements.txt
+
+if [ ${#flagsArray[@]} -gt 0 ]; then
+  pip2nix --no-print-expr "${flagsArray[@]}" "$@"
+fi
 
 cat <<-EOF > pkgs/python-modules/pypi-packages.nix
 { pkgs, callPackage }:
