@@ -45,6 +45,8 @@ let
 
         pipInstallPhase
 
+        ${pythonPlatform.python} -OO -m compileall -qf $out/${pythonPlatform.sitePackages} || true
+
         for dep in $pythonDepends; do
             for f in $dep/${pythonPlatform.sitePackages}/*; do
                 name=''${f##*/}
