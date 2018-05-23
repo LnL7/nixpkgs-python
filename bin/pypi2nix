@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+PATH="$(cd ${BASH_SOURCE[0]}/.. && pwd -P):$PATH"
+
 nix-instantiate --eval --strict --json -A pythonng.index \
   | jq -r '.[] | select(.pname) | [.pname, .version] | join("==")' \
   > pypi-requirements.txt
