@@ -267,7 +267,7 @@ callPackage
         print(json.dumps(pkg))
         continue
 
-    attr = '%s_%s' % (key, pkg['version'])
+    attr = '%s_%s' % (key, pkg['version'].replace('.', '_'))
     inputs = ['python', 'pythonPlatform', 'stdenv', 'fetchurl']
 
     system_exprs = []
