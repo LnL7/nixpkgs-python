@@ -29,6 +29,8 @@ if __name__ == '__main__':
                         help='Extra system dependencies')
     parser.add_argument('-P', '--python-depends', type=str, action='append', default=list(),
                         help='Extra python dependencies')
+    parser.add_argument('--check', action='store_true', default=False,
+                        help='Check source hashes')
     parser.add_argument('--no-print-expr', action='store_true', default=False,
                         help='Don\'t print generated expressions')
     parser.add_argument('--print-json', action='store_true', default=False,
@@ -122,8 +124,8 @@ for spec in args.package_spec:
         exit(1)
     key = normalize_name(req.name)
 
+    pkg_cache = cache.get(spec.replace('==', '_').replace('.', '_'))
     if args.print_cache:
-        pkg_cache = cache.get(spec.replace('==', '_').replace('.', '_'))
         if pkg_cache:
             pkg = {'key': key}
             pkg.update(pkg_cache)
@@ -138,7 +140,9 @@ for spec in args.package_spec:
         rev, _, _ = output.decode().partition('\t')
         src = {'url': args.git_url, 'rev': rev}
         pkg['src'] = src
-        pkg_cache = {}
+    elif pkg_cache and not args.check:
+        pkg = pkg_cache
+        src = pkg_cache['src']
     else:
         dist = loc.locate(req.requirement)
         pkg = {'key': key, 'pname': dist.name.replace('-', '_'), 'version': dist.version}
@@ -147,7 +151,6 @@ for spec in args.package_spec:
         src = {'url': url, digest_algo: digest}
         pkg['src'] = src
 
-        pkg_cache = cache.get('%s_%s' % (key, dist.version.replace('.', '_')))
         if pkg_cache and digest == pkg_cache.get('src', {}).get(digest_algo, {}):
             pkg_cache.update(pkg)
             pkg = pkg_cache
