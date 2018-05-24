@@ -349,26 +349,33 @@ callPackage
     call_expr = ' \n          '.join(call_args)
 
     if args.git_url:
+        rec_expr = 'rec '
+        suffix_expr = '\n       versionSuffix = "pre${toString src.revCount or 0}.${toString src.shortRev or "000000"}";'
         fetch_expr = """builtins.fetchGit {
          url = "%(url)s";
          rev = "%(rev)s";
        }""" % src
     else:
+        rec_expr = ''
+        suffix_expr = ''
         fetch_expr = """fetchurl {
          url = "%(url)s";
          sha256 = "%(sha256)s";
        }""" % src
 
-    data = {'attr': attr, 'fetch_expr': fetch_expr, 'inputs_expr': inputs_expr, 'attrs_expr': attrs_expr, 'meta_expr': meta_expr, 'call_expr': call_expr}
+    data = {'attr': attr, 'inputs_expr': inputs_expr,
+            'rec_expr': rec_expr, 'suffix_expr': suffix_expr,
+            'fetch_expr': fetch_expr, 'attrs_expr': attrs_expr,
+            'meta_expr': meta_expr, 'call_expr': call_expr}
     data.update(pkg)
     data.update(meta)
 
     expr = """
   %(attr)s = callPackage
     ({ %(inputs_expr)s }:
-     python.mkDerivation {
+     python.mkDerivation %(rec_expr)s{
        pname = "%(pname)s";
-       version = "%(version)s";
+       version = "%(version)s";%(suffix_expr)s
        src = %(fetch_expr)s;%(attrs_expr)s
        meta = with stdenv.lib; {%(meta_expr)s
        };
