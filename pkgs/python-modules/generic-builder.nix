@@ -5,8 +5,8 @@ let
   checkPython = stdenv.lib.any (x: stdenv.lib.matchAttrs x pythonPlatform);
 
   mkDerivation =
-    { pname, version, src ? null
-    , name ? "python${pythonPlatform.version}-${pname}-${version}"
+    { pname, version, versionSuffix ? "", src ? null
+    , name ? "python${pythonPlatform.version}-${pname}-${version}${versionSuffix}"
     , meta ? {}
     , passthru ? {}
     , info ? wheel.info
@@ -31,7 +31,7 @@ let
     , ... }@attrs:
 
     stdenv.mkDerivation ({
-      inherit name pname version;
+      inherit name pname version versionSuffix;
       inherit pipFlags pipCheckFlags pipInstallFlags;
       inherit systemDepends pythonDepends;
       src = wheel;
