@@ -15,6 +15,7 @@ let
     , systemDepends ? [], pythonDepends ? []
     , pipFlags ? []
     , dontPipCheck ? false, pipCheckFlags ? []
+    , dontRemoveTests ? false
     , pipInstallFlags ? [ "${pname}==${version}" "--find-links" "./dist" ]
     , nativeBuildInputs ? [], propagatedNativeBuildInputs ? []
     , buildInputs ? [], propagatedBuildInputs ? []
@@ -70,6 +71,10 @@ let
 
         rm -rf $out/bin/__pycache__
 
+        if [ -z "''${dontRemoveTests:-}" ]; then
+            rm -rf $out/${pythonPlatform.sitePackages}/test $out/${pythonPlatform.sitePackages}/tests
+        fi
+
         runHook postInstall
       '';
 
@@ -91,6 +96,7 @@ let
       } // meta;
     }
     // optionalAttrs (dontPipCheck)            { inherit dontPipCheck; }
+    // optionalAttrs (dontRemoveTests)         { inherit dontRemoveTests; }
     // optionalAttrs (pipCheckPhase != "")     { inherit pipCheckPhase; }
     // optionalAttrs (prePipCheck != "")       { inherit prePipCheck; }
     // optionalAttrs (postPipCheck != "")      { inherit postPipCheck; }
