@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-PATH="$(cd ${BASH_SOURCE[0]}/.. && pwd -P):$PATH"
+PATH="$(dirname "${BASH_SOURCE[0]}"):$PATH"
 
 declare -a flagsArray=()
 
