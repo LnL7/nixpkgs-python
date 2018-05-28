@@ -1,6 +1,6 @@
 { stdenv, buildEnv, python, pythonPlatform, pythonScope }:
 
-{ withPackages
+{ withPackages ? p: []
 }:
 
 let
