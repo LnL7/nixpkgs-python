@@ -1,14 +1,13 @@
 { stdenv, buildEnv, python, pythonPlatform, pythonScope }:
 
 { withPackages ? p: []
+, pythonTools ? [], pythonDepends ? []
 }:
 
 let
-  pythonDepends = withPackages pythonScope;
-
   self = buildEnv {
     name = "${python.name}-with-packages";
-    paths = [ python ] ++ pythonDepends;
+    paths = [ python ] ++ withPackages pythonScope ++ pythonDepends;
     pathsToLink = [ "/lib" ];
 
     postBuild = ''
@@ -21,6 +20,14 @@ let
           else
               cp $f $out/bin
           fi
+      done
+
+      for dep in ${stdenv.lib.concatStringsSep " " pythonTools}; do
+          for f in $dep/bin/*; do
+              substitute $f $out/bin/''${f##*/} \
+                  --replace "#!${python}/bin/" "#!$out/bin/"
+              chmod +x $out/bin/''${f##*/}
+          done
       done
     '';
 
