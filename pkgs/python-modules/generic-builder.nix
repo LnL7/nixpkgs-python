@@ -38,8 +38,8 @@ let
       src = wheel;
 
       nativeBuildInputs = [ pipHook ] ++ nativeBuildInputs;
-      buildInputs = [ pip ] ++ systemDepends ++ pythonDepends ++ buildInputs;
-      propagatedBuildInputs = [ python ] ++ propagatedBuildInputs;
+      buildInputs = [ python pip ] ++ systemDepends ++ pythonDepends ++ buildInputs;
+      inherit propagatedBuildInputs;
 
       installPhase = ''
         runHook preInstall
