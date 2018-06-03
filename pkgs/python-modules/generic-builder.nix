@@ -15,6 +15,7 @@ let
     , systemDepends ? [], pythonDepends ? []
     , pipFlags ? []
     , dontPipCheck ? false, pipCheckFlags ? []
+    , dontDetectConflicts ? false
     , dontRemoveTests ? false
     , pipInstallFlags ? [ "${pname}==${version}" "--find-links" "./dist" ]
     , nativeBuildInputs ? [], propagatedNativeBuildInputs ? []
@@ -50,24 +51,13 @@ let
 
         for dep in $pythonDepends; do
             for f in $dep/${pythonPlatform.sitePackages}/*; do
-                name=''${f##*/}
-                l=$out/${pythonPlatform.sitePackages}/$name
-                if [ "$name" = __pycache__ ]; then
-                    continue
-                fi
-                if [ "$(readlink -f $f)" = "$(readlink -f $l)" ]; then
-                    continue
-                fi
-                if ! ln -s "$f" "$l"; then
-                    echo
-                    echo "error: conflicting dependency '$name' in"
-                    echo "  $(readlink -f $f)"
-                    echo "  $(readlink -f $l)"
-                    echo
-                    false
-                fi
+                cp -Rsn "$f" $out/${pythonPlatform.sitePackages}
             done
         done
+
+        if [ -z "''${dontDetectConflicts:-}" ]; then
+            ${pythonPlatform.python} ${./pip/detect_conflicts.py} $out/${pythonPlatform.sitePackages}/*.dist-info
+        fi
 
         rm -rf $out/bin/__pycache__
 
@@ -96,6 +86,7 @@ let
       } // meta;
     }
     // optionalAttrs (dontPipCheck)            { inherit dontPipCheck; }
+    // optionalAttrs (dontDetectConflicts)     { inherit dontDetectConflicts; }
     // optionalAttrs (dontRemoveTests)         { inherit dontRemoveTests; }
     // optionalAttrs (pipCheckPhase != "")     { inherit pipCheckPhase; }
     // optionalAttrs (prePipCheck != "")       { inherit prePipCheck; }
