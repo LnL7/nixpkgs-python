@@ -49,8 +49,17 @@ let
         ${pythonPlatform.python} -OO -m compileall -qf $out/${pythonPlatform.sitePackages} || true
 
         for dep in $pythonDepends; do
-            for f in $dep/${pythonPlatform.sitePackages}/*; do
-                cp -Rsn "$f" $out/${pythonPlatform.sitePackages}
+            for f in $(find $dep/${pythonPlatform.sitePackages} -type f -o -type l); do
+                l=''${f/$dep/$out}
+                f=$(readlink -f "$f")
+                if [ -L "$l" ]; then
+                    l=$(readlink -f "$f")
+                    if [ "$f" = "$l" ]; then
+                        continue
+                    fi
+                fi
+                mkdir -p "$(dirname "$l")"
+                ln -s "$f" "$l"
             done
         done
 
