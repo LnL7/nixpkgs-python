@@ -53,6 +53,9 @@ let
             for f in $(find $dep/${pythonPlatform.sitePackages} -type f -o -type l); do
                 l=''${f/$dep/$out}
                 f=$(readlink -f "$f")
+                if [ -s "$l" ]; then
+                    continue
+                fi
                 if [ -L "$l" ]; then
                     l=$(readlink -f "$f")
                     if [ "$f" = "$l" ]; then
