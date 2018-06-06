@@ -13,6 +13,8 @@ buildEnv {
   paths = pkgs ++ pythonDepends;
   pathsToLink = [ "/lib" ];
 
+  ignoreCollisions = true;
+
   postBuild = ''
     mkdir -p $out/bin
     for dep in ${stdenv.lib.concatStringsSep " " (pkgs ++ pythonTools)}; do
