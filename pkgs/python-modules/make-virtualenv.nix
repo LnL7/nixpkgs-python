@@ -1,6 +1,7 @@
 { stdenv, python, virtualenv, pythonPlatform, pythonScope, virtualenvHook, mkPythonEnv }:
 
 { src ? null
+, name ? "${pythonPlatform.python}-virtualenv-with-packages"
 , withPackages ? p: []
 , pythonTools ? [], pythonDepends ? []
 , systemDepends ? []
@@ -19,14 +20,15 @@ let
 in
 
 stdenv.mkDerivation (builtins.removeAttrs attrs ["withPackages"] // {
-  name = "${pythonPlatform.python}-virtualenv-with-packages";
-  inherit env pipInstallFlags;
+  inherit name env pipInstallFlags;
   nativeBuildInputs = [ virtualenv virtualenvHook ] ++ nativeBuildInputs;
   buildInputs = [ env ] ++ systemDepends ++ buildInputs;
 
   SOURCE_DATE_EPOCH = "315532800";
 
   buildPhase = ''
+    runHook preBuild
+
     virtualenvPrefix=''${virtualenvPrefix:-$PWD/venv}
 
     virtualenvBuildPhase
@@ -34,15 +36,21 @@ stdenv.mkDerivation (builtins.removeAttrs attrs ["withPackages"] // {
 
     echo ${env}/${pythonPlatform.sitePackages} > $virtualenvPrefix/${pythonPlatform.sitePackages}/nix-environment.pth
     ln -sfn ${env} $virtualenvPrefix/nix-profile
+
+    runHook postBuild
   '';
 
   installPhase = ''
-    mv $virtualenvPrefix $out
+    runHook preInstall
 
     deactivate
+    mv $virtualenvPrefix $out
+
     virtualenvPrefix=$out
     virtualenvBuildPhase
     source $out/bin/activate
+
+    runHook postInstall
   '';
 
   shellHook = ''
