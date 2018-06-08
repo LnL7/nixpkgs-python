@@ -36,6 +36,7 @@ let
 
   mkPythonDerivation = pkgs.callPackage ./generic-builder.nix {
     inherit pip;
+    inherit (pkgs.xlibs) lndir;
     inherit (self) python pythonPlatform pipHook mkPythonWheel mkShellEnv;
     pythonScope = self;
   };
@@ -47,6 +48,7 @@ let
 
   mkPythonEnv = pkgs.callPackage ./make-environment.nix {
     inherit (self) python pythonPlatform;
+    inherit (pkgs.xlibs) lndir;
     pythonScope = self;
   };
 

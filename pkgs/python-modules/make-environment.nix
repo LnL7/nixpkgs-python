@@ -1,8 +1,9 @@
-{ stdenv, python, pythonPlatform, pythonScope }:
+{ stdenv, lndir, python, pythonPlatform, pythonScope }:
 
 { name ? "${pythonPlatform.python}-environment"
 , withPackages ? p: []
 , pythonTools ? [], pythonDepends ? []
+, nativeBuildInputs ? []
 , dontDetectConflicts ? false
 , ...
 }@attrs:
@@ -13,28 +14,16 @@ in
 
 stdenv.mkDerivation (attrs // {
   inherit name;
-  buildInputs = [ python ];
+  nativeBuildInputs = [ lndir python ] ++ nativeBuildInputs;
 
   pythonDepends = pkgs ++ pythonDepends;
   pythonTools = pkgs ++ pythonTools;
 
   buildCommand = ''
+    mkdir -p $out/${pythonPlatform.sitePackages}
+
     for dep in $pythonDepends; do
-        for f in $(find $dep/${pythonPlatform.sitePackages} -type f -o -type l); do
-            l=''${f/$dep/$out}
-            f=$(readlink -f "$f")
-            if [ -s "$l" ]; then
-                continue
-            fi
-            if [ -L "$l" ]; then
-                l=$(readlink -f "$f")
-                if [ "$f" = "$l" ]; then
-                    continue
-                fi
-            fi
-            mkdir -p "$(dirname "$l")"
-            ln -s "$f" "$l"
-        done
+        lndir $dep/${pythonPlatform.sitePackages} $out/${pythonPlatform.sitePackages}
     done
 
     if [ -z "''${dontDetectConflicts:-}" ]; then

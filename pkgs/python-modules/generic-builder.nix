@@ -1,4 +1,4 @@
-{ pkgs, stdenv, coreutils, python, pip, pythonPlatform, pythonScope, pipHook, mkShellEnv, mkPythonWheel }:
+{ pkgs, stdenv, coreutils, lndir, python, pip, pythonPlatform, pythonScope, pipHook, mkShellEnv, mkPythonWheel }:
 
 let
   inherit (stdenv.lib) optionalAttrs;
@@ -38,7 +38,7 @@ let
       inherit systemDepends pythonDepends;
       src = wheel;
 
-      nativeBuildInputs = [ pipHook ] ++ nativeBuildInputs;
+      nativeBuildInputs = [ lndir pipHook ] ++ nativeBuildInputs;
       buildInputs = [ python pip ] ++ systemDepends ++ pythonDepends ++ buildInputs;
       inherit propagatedBuildInputs;
 
@@ -50,21 +50,7 @@ let
         ${pythonPlatform.python} -OO -m compileall -qf $out/${pythonPlatform.sitePackages} || true
 
         for dep in $pythonDepends; do
-            for f in $(find $dep/${pythonPlatform.sitePackages} -type f -o -type l); do
-                l=''${f/$dep/$out}
-                f=$(readlink -f "$f")
-                if [ -s "$l" ]; then
-                    continue
-                fi
-                if [ -L "$l" ]; then
-                    l=$(readlink -f "$f")
-                    if [ "$f" = "$l" ]; then
-                        continue
-                    fi
-                fi
-                mkdir -p "$(dirname "$l")"
-                ln -s "$f" "$l"
-            done
+            lndir $dep/${pythonPlatform.sitePackages} $out/${pythonPlatform.sitePackages}
         done
 
         if [ -z "''${dontDetectConflicts:-}" ]; then
