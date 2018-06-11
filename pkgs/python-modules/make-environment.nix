@@ -12,7 +12,7 @@ let
   pkgs = withPackages pythonScope;
 in
 
-stdenv.mkDerivation (attrs // {
+stdenv.mkDerivation (builtins.removeAttrs attrs ["withPackages"] // {
   inherit name;
   nativeBuildInputs = [ lndir python ] ++ nativeBuildInputs;
 
