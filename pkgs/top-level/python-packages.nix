@@ -38,7 +38,6 @@ in
 
   index = import ../python-modules/index.nix {
     inherit stdenv callPackage;
-    pythonScope = pythonng.packages.cpython36;
   };
 
   lib = import ../python-modules/lib.nix {

@@ -1,8 +1,15 @@
-{ stdenv, callPackage, pythonScope }:
+{ stdenv, callPackage }:
 
 with stdenv.lib;
 
 let
+  pythonScope = (fakeImport ../.. {}).pythonng.packages.cpython36;
+
+  fakeImport = builtins.scopedImport { builtins = fakeBuiltins; import = fakeImport; };
+
+  fakeBuiltins = builtins.builtins // {
+    fetchGit = args: args // builtins.removeAttrs (builtins.fetchGit args) ["outPath"];
+  };
 
   fakeStdenv = stdenv // {
     isDarwin = "stdenv.isDarwin";
