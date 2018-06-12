@@ -348,7 +348,13 @@ callPackage
     if src.get('expr') == 'builtins.fetchGit':
         rec_expr = 'rec '
         suffix_expr = '\n       versionSuffix = "pre${toString src.revCount or 0}.${toString src.shortRev or "000000"}";'
-        fetch_expr = """builtins.fetchGit {
+        if 'ref' in src:
+            fetch_expr = """builtins.fetchGit {
+         url = "%(url)s";
+         ref = "%(ref)s";
+       }""" % src
+        else:
+            fetch_expr = """builtins.fetchGit {
          url = "%(url)s";
          rev = "%(rev)s";
        }""" % src
