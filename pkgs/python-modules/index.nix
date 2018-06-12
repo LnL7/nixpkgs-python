@@ -8,7 +8,7 @@ let
   fakeImport = builtins.scopedImport { builtins = fakeBuiltins; import = fakeImport; };
 
   fakeBuiltins = builtins.builtins // {
-    fetchGit = args: args // builtins.removeAttrs (builtins.fetchGit args) ["outPath"];
+    fetchGit = args: { expr = "builtins.fetchGit"; } // args;
   };
 
   fakeStdenv = stdenv // {
@@ -51,7 +51,7 @@ let
     in out;
 
   fakeScope = {
-    fetchurl = id;
+    fetchurl = args: { expr = "fetchurl"; } // args;
     python = fakePython;
     pythonPlatform = fakePythonPlatform;
     stdenv = fakeStdenv;

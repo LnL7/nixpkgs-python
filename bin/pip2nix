@@ -145,20 +145,17 @@ for spec in args.package_spec:
         pkg = {'pname': req.name, 'version': '0.0.0'}
         output = subprocess.check_output(['git', 'ls-remote', args.git_url, 'HEAD'])
         rev, _, _ = output.decode().partition('\t')
-        src = {'url': args.git_url, 'rev': rev}
+        src = {'expr': 'builtins.fetchGit', 'url': args.git_url, 'rev': rev}
         pkg['src'] = src
     elif pkg_cache and not args.check:
         pkg = pkg_cache
         src = pkg_cache['src']
-        if isinstance(src, str):
-            # skip builtins.fetchGit
-            continue
     else:
         dist = loc.locate(req.requirement)
         pkg = {'key': key, 'pname': dist.name.replace('-', '_'), 'version': dist.version}
         sort_keys = {'whl': 10, 'zip': 1, 'gz': -1}
         url, (digest_algo, digest) = sorted(dist.digests.items(), key=lambda item: sort_keys.get(item[0].rpartition('.')[2], 0))[0]
-        src = {'url': url, digest_algo: digest}
+        src = {'expr': 'fetchurl', 'url': url, digest_algo: digest}
         pkg['src'] = src
 
         if pkg_cache and digest == pkg_cache.get('src', {}).get(digest_algo, {}):
@@ -348,20 +345,23 @@ callPackage
             call_args.append('inherit (%s) %s;' % (arg['expr'], ' '.join(arg['inherit'])))
     call_expr = ' \n          '.join(call_args)
 
-    if args.git_url:
+    if src.get('expr') == 'builtins.fetchGit':
         rec_expr = 'rec '
         suffix_expr = '\n       versionSuffix = "pre${toString src.revCount or 0}.${toString src.shortRev or "000000"}";'
         fetch_expr = """builtins.fetchGit {
          url = "%(url)s";
          rev = "%(rev)s";
        }""" % src
-    else:
+    elif src.get('expr') == 'fetchurl':
         rec_expr = ''
         suffix_expr = ''
         fetch_expr = """fetchurl {
          url = "%(url)s";
          sha256 = "%(sha256)s";
        }""" % src
+    else:
+        print('error: unexpected source %s' % src)
+        exit(1)
 
     data = {'attr': attr, 'inputs_expr': inputs_expr,
             'rec_expr': rec_expr, 'suffix_expr': suffix_expr,
