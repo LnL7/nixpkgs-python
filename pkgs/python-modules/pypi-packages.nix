@@ -722,7 +722,7 @@ self:
      }) { };
 
   jsonschema_2_6_0 = callPackage
-    ({ python, pythonPlatform, stdenv, fetchurl, functools32 }:
+    ({ python, pythonPlatform, stdenv, fetchurl, functools32, vcversioner }:
      python.mkDerivation {
        pname = "jsonschema";
        version = "2.6.0";
@@ -730,7 +730,8 @@ self:
          url = "https://files.pythonhosted.org/packages/58/b9/171dbb07e18c6346090a37f03c7e74410a1a56123f847efed59af260a298/jsonschema-2.6.0.tar.gz";
          sha256 = "6ff5f3180870836cae40f06fa10419f557208175f13ad7bc26caa77beb1f6e02";
        };
-       pythonDepends = stdenv.lib.optional pythonPlatform.isPython27 functools32;
+       pythonDepends = [ vcversioner ]
+         ++ stdenv.lib.optional pythonPlatform.isPython27 functools32;
        meta = with stdenv.lib; {
          description = "An implementation of JSON Schema validation for Python";
          homepage = "http://github.com/Julian/jsonschema";
