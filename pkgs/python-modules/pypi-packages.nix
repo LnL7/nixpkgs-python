@@ -526,7 +526,7 @@ self:
      }) { };
 
   cliff_2_13_0 = callPackage
-    ({ python, pythonPlatform, stdenv, fetchurl, prettytable, pyyaml, pbr, pyparsing, six, stevedore, cmd2, unicodecsv }:
+    ({ python, pythonPlatform, stdenv, fetchurl, prettytable, pyyaml, pbr, pyparsing, six, stevedore, unicodecsv, cmd2 }:
      python.mkDerivation {
        pname = "cliff";
        version = "2.13.0";
@@ -534,8 +534,8 @@ self:
          url = "https://files.pythonhosted.org/packages/27/dc/4105138ccdf500a56f782ec2eb8a80eb3e35321133c9159224bda989d362/cliff-2.13.0.tar.gz";
          sha256 = "447f0afe5fab907c51e3e451e6915cba424fe4a98962a5bdd7d4420b9d6aed35";
        };
-       pythonDepends = [ prettytable pyyaml pbr pyparsing six stevedore ]
-         ++ stdenv.lib.optionals pythonPlatform.isPython27 [ cmd2 unicodecsv ];
+       pythonDepends = [ prettytable pyyaml pbr pyparsing six stevedore cmd2 ]
+         ++ stdenv.lib.optionals pythonPlatform.isPython27 [ unicodecsv ];
        meta = with stdenv.lib; {
          description = "Command Line Interface Formulation Framework";
          homepage = "https://docs.openstack.org/cliff/latest/";
