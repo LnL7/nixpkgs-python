@@ -5,9 +5,14 @@ PATH="$(dirname "${BASH_SOURCE[0]}"):$PATH"
 
 declare -a flagsArray=()
 
+printVersions=0
+
 while [ $# -gt 0 ]; do
   i=$1; shift
   case $i in
+    --print-versions)
+      printVersions=1
+      ;;
     --)
       break;;
     *)
@@ -35,8 +40,6 @@ self:
 }
 EOF
 
-if [ ! -f requirements.txt ]; then exit; fi
-
 generate() {
   local item=$1
 
@@ -55,6 +58,20 @@ generate() {
       echo "  $key = self.${key}_${version};";;
   esac
 }
+
+if [ "$printVersions" -eq 0 ]; then
+  echo
+  for item in "${flagsArray[@]}"; do
+    case $item in
+      *==*)
+        generate "$item"
+        ;;
+    esac
+  done
+
+  echo
+  exit
+fi
 
 cat <<-EOF
 self: super:
