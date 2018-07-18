@@ -101,7 +101,7 @@ def from_license(license):
         return 'psfl'
     if 'ZPL' in license:
         return 'zpl21'
-    print('warning: unknown license %s' % license)
+    print('warning: unknown license %s' % license, file=sys.stderr)
     return None
 
 
@@ -119,12 +119,12 @@ for path in args.requirement:
 
 
 if args.git_url and len(args.package_spec) > 1:
-    print('error: --git-url not allowed with multiple packages')
+    print('error: --git-url not allowed with multiple packages', file=sys.stderr)
     exit(1)
 
 
 if args.git_rev and not args.git_url:
-    print('error: --git-rev not allowed without --git-url')
+    print('error: --git-rev not allowed without --git-url', file=sys.stderr)
     exit(1)
 
 
@@ -136,7 +136,7 @@ for spec in args.package_spec:
 
     req = parse_requirement(spec)
     if not req:
-        print('error: invalid requirement \'%s\'' % spec)
+        print('error: invalid requirement \'%s\'' % spec, file=sys.stderr)
         exit(1)
     key = normalize_name(req.name)
     _, _, version = spec.partition('==')
@@ -178,7 +178,7 @@ for spec in args.package_spec:
         else:
             if pkg_cache:
                 digest_cache = pkg_cache.get('src', {}).get(digest_algo)
-                print('warning: cache mismatch for %s' % req.requirement)
+                print('warning: cache mismatch for %s' % req.requirement, file=sys.stderr)
             pkg_cache = None
 
     python_conditional_deps = []
@@ -194,7 +194,7 @@ for spec in args.package_spec:
                 pkg_overrides = json.load(fd)
 
     if not args.no_dist_info and not pkg_cache:
-        print('building info for %s' % key)
+        print('building info for %s' % key, file=sys.stderr)
         data = {}
         data.update(pkg)
         if args.git_url:
@@ -256,7 +256,7 @@ callPackage
         elif os.path.exists('%s/METADATA' % dist_info):
             meta = Metadata('%s/METADATA' % dist_info)
         else:
-            print('warning: package metadata missing')
+            print('warning: package metadata missing', file=sys.stderr)
 
         if meta:
             homepage = meta.dictionary.get('extensions', {}).get('python.details', {}).get('project_urls', {}).get('Home')
@@ -381,7 +381,7 @@ callPackage
          sha256 = "%(sha256)s";
        }""" % src
     else:
-        print('error: unexpected source %s' % src)
+        print('error: unexpected source %s' % src, file=sys.stderr)
         exit(1)
 
     data = {'attr': attr, 'inputs_expr': inputs_expr,
