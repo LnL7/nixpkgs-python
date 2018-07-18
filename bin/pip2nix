@@ -1,5 +1,6 @@
 #!/usr/bin/env nix-shell
 #!nix-shell -i python3.6 -p "python36.withPackages (py: with py; [ pip ])"
+
 import argparse
 import json
 import os
@@ -49,6 +50,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 else:
     args = None
+
+root_dir = os.path.abspath(os.path.join(__file__, '../..'))
 
 
 loc = SimpleScrapingLocator(args.index_url, scheme='legacy')
@@ -103,7 +106,8 @@ def from_license(license):
 
 
 if not args.no_cache:
-    output = subprocess.check_output(['nix-instantiate', '--eval', '--strict', '--json', '-A', 'pythonng.index'])
+    file = os.path.join(root_dir, 'default.nix')
+    output = subprocess.check_output(['nix-instantiate', file, '--eval', '--strict', '--json', '-A', 'pythonng.index'])
     cache = json.loads(output)
 else:
     cache = {}
@@ -184,7 +188,7 @@ for spec in args.package_spec:
 
     pkg_overrides = {}
     if not args.no_overrides:
-        path = 'index/%s/overrides.json' % key
+        path = os.path.join(root_dir, 'index', key, 'overrides.json')
         if os.path.exists(path):
             with open(path, 'r') as fd:
                 pkg_overrides = json.load(fd)
@@ -195,7 +199,7 @@ for spec in args.package_spec:
         data.update(pkg)
         if args.git_url:
             fetch_expr = """builtins.fetchGit {
-       url = "%(url)s";
+       url = %(url)s;
        rev = "%(rev)s";
      }""" % src
         else:
@@ -203,9 +207,10 @@ for spec in args.package_spec:
        url = "%(url)s";
        sha256 = "%(sha256)s";
      }""" % src
-        data.update({'fetch_expr': fetch_expr})
+        data.update({'fetch_expr': fetch_expr,
+                     'file': os.path.join(root_dir, 'default.nix')})
         expr = """
-with import ./. {};
+with import %(file)s {};
 
 callPackage
   ({ mkPythonInfo, fetchurl }:
@@ -360,12 +365,12 @@ callPackage
         suffix_expr = '\n       versionSuffix = "pre${toString src.revCount or 0}.${toString src.shortRev or "000000"}";'
         if 'ref' in src:
             fetch_expr = """builtins.fetchGit {
-         url = "%(url)s";
+         url = %(url)s;
          ref = "%(ref)s";
        }""" % src
         else:
             fetch_expr = """builtins.fetchGit {
-         url = "%(url)s";
+         url = %(url)s;
          rev = "%(rev)s";
        }""" % src
     elif src.get('expr') == 'fetchurl':
@@ -399,8 +404,8 @@ callPackage
 
     if not args.no_print_expr:
         print(expr)
-    os.makedirs('cache/%s' % key, exist_ok=True)
-    with open('cache/%s/%s.nix' % (key, pkg['version']), 'w') as fd:
+    os.makedirs(os.path.join(root_dir, 'cache', key), exist_ok=True)
+    with open(os.path.join(root_dir, 'cache', key, '%s.nix' % pkg['version']), 'w') as fd:
         fd.write(expr)
 
 
