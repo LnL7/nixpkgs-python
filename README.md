@@ -29,6 +29,17 @@ requires specifying the dependencies manually (or using overrides).
 pip2nix --no-dist-info --python-depends pycparser cffi==1.11.5
 ```
 
+## Git sources
+
+For custom packages that are not available on pypi a git source can be used.
+This also works with local paths to a git repository for development.
+
+> NOTE only use this for your own packages.
+
+```sh
+pip2nix --git-url ssh://git@github.com/LnL7/python-hello.git hello
+```
+
 ## Python environments
 
 An interpreter with packages.
