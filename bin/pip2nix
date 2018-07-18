@@ -25,6 +25,8 @@ if __name__ == '__main__':
                         help='URL of simple python package index')
     parser.add_argument('-G', '--git-url', type=str,
                         help='Generate expression using git source url')
+    parser.add_argument('--git-rev', type=str,
+                        help='Git source revision to use instead of HEAD')
     parser.add_argument('-S', '--system-depends', type=str, action='append', default=list(),
                         help='Extra system dependencies')
     parser.add_argument('-P', '--python-depends', type=str, action='append', default=list(),
@@ -117,6 +119,11 @@ if args.git_url and len(args.package_spec) > 1:
     exit(1)
 
 
+if args.git_rev and not args.git_url:
+    print('error: --git-rev not allowed without --git-url')
+    exit(1)
+
+
 for spec in args.package_spec:
     spec, _, _ = spec.strip().partition('#')
     spec, _, _ = spec.strip().partition(';')
@@ -143,8 +150,11 @@ for spec in args.package_spec:
 
     if args.git_url:
         pkg = {'pname': req.name, 'version': '0.0.0'}
-        output = subprocess.check_output(['git', 'ls-remote', args.git_url, 'HEAD'])
-        rev, _, _ = output.decode().partition('\t')
+        if args.git_rev:
+            rev = args.git_rev
+        else:
+            output = subprocess.check_output(['git', 'ls-remote', args.git_url, 'HEAD'])
+            rev, _, _ = output.decode().partition('\t')
         src = {'expr': 'builtins.fetchGit', 'url': args.git_url, 'rev': rev}
         pkg['src'] = src
     elif pkg_cache and not args.check:
