@@ -20,27 +20,28 @@ def cmd_build(args):
     cfg = setuptools.distutils.core.run_setup('setup.py', stop_after='config')
     meta = {'name': cfg.metadata.name, 'version': cfg.metadata.version}
 
-    input_expr = b"""
-{ pythonng ? import /src/nixpkgs-python {}, interpreter ? "cpython27" }:
+    file = os.path.join(root_dir, 'default.nix')
+    input_expr = """
+{ pythonng ? import %(file)s {}, interpreter ? "cpython27" }:
 let
   pythonPackages = pythonng.pythonng.packages."${interpreter}";
   inherit (pythonPackages) callPackage;
 in
 {
-"""
+""" % {'file': os.path.join(root_dir, 'default.nix')}
 
     output = subprocess.check_output([os.path.join(root_dir, 'bin/pip2nix'), '--git-url', './.', cfg.metadata.name])
-    input_expr += output
+    input_expr += output.decode()
 
-    input_expr += b"""
+    input_expr += """
 
 }
 """
 
     if args.print_expr:
-        sys.stdout.write(input_expr.decode())
+        sys.stdout.write(input_expr)
     else:
-        output = subprocess.check_output(['nix-build', '-E', '-'], input=input_expr)
+        output = subprocess.check_output(['nix-build', '-E', '-'], input=str.encode(input_expr))
         sys.stdout.write(output.decode())
 
 
