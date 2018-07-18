@@ -1,0 +1,64 @@
+#!/usr/bin/env nix-shell
+#!nix-shell -i python3.6 -p "python36.withPackages (py: with py; [ pip ])"
+
+import argparse
+import os
+import subprocess
+import sys
+
+import setuptools
+
+
+root_dir = os.path.abspath(os.path.join(__file__, '../..'))
+
+
+def cmd_build(args):
+    if not os.path.exists('setup.py'):
+        print('error: no setup.py found', file=sys.stderr)
+        exit(1)
+
+    cfg = setuptools.distutils.core.run_setup('setup.py', stop_after='config')
+    meta = {'name': cfg.metadata.name, 'version': cfg.metadata.version}
+
+    input_expr = b"""
+{ pythonng ? import /src/nixpkgs-python {}, interpreter ? "cpython27" }:
+let
+  pythonPackages = pythonng.pythonng.packages."${interpreter}";
+  inherit (pythonPackages) callPackage;
+in
+{
+"""
+
+    output = subprocess.check_output([os.path.join(root_dir, 'bin/pip2nix'), '--git-url', './.', cfg.metadata.name])
+    input_expr += output
+
+    input_expr += b"""
+
+}
+"""
+
+    if args.print_expr:
+        sys.stdout.write(input_expr.decode())
+    else:
+        output = subprocess.check_output(['nix-build', '-E', '-'], input=input_expr)
+        sys.stdout.write(output.decode())
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Nix Python Tool.')
+    subparsers = parser.add_subparsers()
+    subparsers.required = True
+    subparsers.dest = 'command'
+    build_parser = subparsers.add_parser('build')
+    build_parser.set_defaults(func=cmd_build)
+    build_parser.add_argument('--print-expr', action='store_true', default=False,
+                              help='Only print generated expressions')
+
+    args = parser.parse_args()
+    args.func(args)
+
+
+if __name__ == '__main__':
+    main()
+
+# vim:set ft=python:
