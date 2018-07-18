@@ -31,7 +31,7 @@ cat <<-EOF > pkgs/python-modules/pypi-packages.nix
 
 self:
 
-{$(find cache -name '*.nix' -exec cat {} \; -and -exec echo "" \;)
+{$(find -s cache -name '*.nix' -exec cat {} \; -and -exec echo "" \;)
 }
 EOF
 
