@@ -35,7 +35,6 @@ in
     input_expr += """
 }
 """
-
     if args.print_expr:
         sys.stdout.write(input_expr)
     else:
@@ -43,14 +42,53 @@ in
         sys.stdout.write(output.decode())
 
 
+def cmd_ipython(args):
+    if not os.path.exists('setup.py'):
+        print('error: no setup.py found', file=sys.stderr)
+        exit(1)
+
+    file = os.path.join(root_dir, 'default.nix')
+    input_expr = """
+{ pythonng ? import %(file)s {}, interpreter ? "%(interpreter)s" }:
+let
+  self = pythonng.pythonng.packages."${interpreter}";
+  inherit (self) callPackage;
+in
+
+pythonng.pythonng.lib.overrideWithPackages self.ipython (p: builtins.attrValues
+{
+""" % {'interpreter': args.interpreter,
+       'file': os.path.join(root_dir, 'default.nix')}
+
+    output = subprocess.check_output([os.path.join(root_dir, 'bin/pip2nix'),
+                                      '--interpreter', args.interpreter,
+                                      '--src-path' if args.dev else '--git-url',
+                                      './.', args.name])
+    input_expr += output.decode()
+
+    input_expr += """
+})
+"""
+
+    if args.print_expr:
+        sys.stdout.write(input_expr)
+    else:
+        output = subprocess.check_output(['nix-build', '--no-out-link', '-E', '-'], input=str.encode(input_expr))
+        binary = os.path.join(output.decode().strip(), 'bin/ipython')
+        sys.stdout.write(binary)
+        os.execv(binary, ['ipython'])
+
+
 def main():
     parser = argparse.ArgumentParser(description='Nix Python Tool.')
     subparsers = parser.add_subparsers()
     subparsers.required = True
     subparsers.dest = 'command'
+
+    name = os.path.basename(os.path.abspath('.'))
+
     build_parser = subparsers.add_parser('build')
     build_parser.set_defaults(func=cmd_build)
-    name = os.path.basename(os.path.abspath('.'))
     build_parser.add_argument('--name', default=name,
                               help='Package name')
     build_parser.add_argument('--interpreter', default='cpython36',
@@ -59,6 +97,17 @@ def main():
                               help='Build without a git repository or use uncommited changes')
     build_parser.add_argument('--print-expr', action='store_true', default=False,
                               help='Only print generated expressions')
+
+    ipython_parser = subparsers.add_parser('ipython')
+    ipython_parser.set_defaults(func=cmd_ipython)
+    ipython_parser.add_argument('--name', default=name,
+                                help='Package name')
+    ipython_parser.add_argument('--interpreter', default='cpython36',
+                                help='Python interpreter to use')
+    ipython_parser.add_argument('--dev', action='store_true', default=False,
+                                help='Build without a git repository or use uncommited changes')
+    ipython_parser.add_argument('--print-expr', action='store_true', default=False,
+                                help='Only print generated expressions')
 
     args = parser.parse_args()
     args.func(args)
