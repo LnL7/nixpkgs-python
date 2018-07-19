@@ -25,7 +25,9 @@ in
 {
 """ % {'file': os.path.join(root_dir, 'default.nix')}
 
-    output = subprocess.check_output([os.path.join(root_dir, 'bin/pip2nix'), '--git-url', './.', args.name])
+    output = subprocess.check_output([os.path.join(root_dir, 'bin/pip2nix'),
+                                      '--src-path' if args.dev else '--git-url',
+                                      './.', args.name])
     input_expr += output.decode()
 
     input_expr += """
@@ -49,6 +51,8 @@ def main():
     name = os.path.basename(os.path.abspath('.'))
     build_parser.add_argument('--name', default=name,
                               help='Package name')
+    build_parser.add_argument('--dev', action='store_true', default=False,
+                              help='Build without a git repository or use uncommited changes')
     build_parser.add_argument('--print-expr', action='store_true', default=False,
                               help='Only print generated expressions')
 
