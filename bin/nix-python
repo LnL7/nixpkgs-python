@@ -80,8 +80,8 @@ pythonng.pythonng.lib.overrideWithPackages self.ipython (p: builtins.attrValues
     else:
         output = subprocess.check_output(['nix-build', '--no-out-link', '-E', '-'], input=str.encode(input_expr))
         binary = os.path.join(output.decode().strip(), 'bin/ipython')
-        sys.stdout.write(binary)
-        os.execv(binary, ['ipython'])
+        env = {k: v for k, v in os.environ.items() if k not in ['PYTHONHOME', 'PYTHONPATH']}
+        os.execve(binary, ['ipython'], env)
 
 
 def main():
