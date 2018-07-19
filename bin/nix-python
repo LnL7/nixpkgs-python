@@ -60,10 +60,15 @@ pythonng.pythonng.lib.overrideWithPackages self.ipython (p: builtins.attrValues
 """ % {'interpreter': args.interpreter,
        'file': os.path.join(root_dir, 'default.nix')}
 
-    output = subprocess.check_output([os.path.join(root_dir, 'bin/pip2nix'),
-                                      '--interpreter', args.interpreter,
-                                      '--src-path' if args.dev else '--git-url',
-                                      './.', args.name])
+    argv = [os.path.join(root_dir, 'bin/pip2nix'),
+            '--interpreter', args.interpreter,
+            '--src-path' if args.dev else '--git-url',
+            './.', args.name]
+    for dep in args.system_depends:
+        argv.extend(['--system-depends', dep])
+    for dep in args.python_depends:
+        argv.extend(['--python-depends', dep])
+    output = subprocess.check_output(argv)
     input_expr += output.decode()
 
     input_expr += """
@@ -93,6 +98,10 @@ def main():
                               help='Package name')
     build_parser.add_argument('--interpreter', default='cpython36',
                               help='Python interpreter to use')
+    build_parser.add_argument('-S', '--system-depends', type=str, action='append', default=list(),
+                              help='Extra system dependencies')
+    build_parser.add_argument('-P', '--python-depends', type=str, action='append', default=list(),
+                              help='Extra python dependencies')
     build_parser.add_argument('--dev', action='store_true', default=False,
                               help='Build without a git repository or use uncommited changes')
     build_parser.add_argument('--print-expr', action='store_true', default=False,
@@ -104,6 +113,10 @@ def main():
                                 help='Package name')
     ipython_parser.add_argument('--interpreter', default='cpython36',
                                 help='Python interpreter to use')
+    ipython_parser.add_argument('-S', '--system-depends', type=str, action='append', default=list(),
+                                help='Extra system dependencies')
+    ipython_parser.add_argument('-P', '--python-depends', type=str, action='append', default=list(),
+                                help='Extra python dependencies')
     ipython_parser.add_argument('--dev', action='store_true', default=False,
                                 help='Build without a git repository or use uncommited changes')
     ipython_parser.add_argument('--print-expr', action='store_true', default=False,
