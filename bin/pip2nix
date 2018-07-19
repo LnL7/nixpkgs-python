@@ -24,6 +24,8 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--index-url', type=str,
                         default='https://pypi.org/simple',
                         help='URL of simple python package index')
+    parser.add_argument('--interpreter', default='cpython36',
+                        help='Python interpreter to use when evaluating setup.py')
     parser.add_argument('-G', '--git-url', type=str,
                         help='Generate expression using git source url')
     parser.add_argument('--git-rev', type=str,
@@ -220,10 +222,15 @@ for spec in args.package_spec:
        url = "%(url)s";
        sha256 = "%(sha256)s";
      }""" % src
-        data.update({'fetch_expr': fetch_expr,
+        data.update({'interpreter': args.interpreter,
+                     'fetch_expr': fetch_expr,
                      'file': os.path.join(root_dir, 'default.nix')})
         expr = """
-with import %(file)s {};
+{ pythonng ? import %(file)s {}, interpreter ? "%(interpreter)s" }:
+let
+  self = pythonng.pythonng.packages."${interpreter}";
+  inherit (self) callPackage;
+in
 
 callPackage
   ({ mkPythonInfo, fetchurl }:
