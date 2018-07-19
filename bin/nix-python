@@ -19,8 +19,8 @@ def cmd_build(args):
     input_expr = """
 { pythonng ? import %(file)s {}, interpreter ? "cpython27" }:
 let
-  pythonPackages = pythonng.pythonng.packages."${interpreter}";
-  inherit (pythonPackages) callPackage;
+  self = pythonng.pythonng.packages."${interpreter}";
+  inherit (self) callPackage;
 in
 {
 """ % {'file': os.path.join(root_dir, 'default.nix')}
