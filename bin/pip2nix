@@ -28,6 +28,8 @@ if __name__ == '__main__':
                         help='Generate expression using git source url')
     parser.add_argument('--git-rev', type=str,
                         help='Git source revision to use instead of HEAD')
+    parser.add_argument('--src-path', type=str,
+                        help='Generate expression using source path')
     parser.add_argument('-S', '--system-depends', type=str, action='append', default=list(),
                         help='Extra system dependencies')
     parser.add_argument('-P', '--python-depends', type=str, action='append', default=list(),
@@ -118,6 +120,11 @@ for path in args.requirement:
         args.package_spec.extend(fd.readlines())
 
 
+if args.src_path and len(args.package_spec) > 1:
+    print('error: --src-path not allowed with multiple packages', file=sys.stderr)
+    exit(1)
+
+
 if args.git_url and len(args.package_spec) > 1:
     print('error: --git-url not allowed with multiple packages', file=sys.stderr)
     exit(1)
@@ -152,7 +159,11 @@ for spec in args.package_spec:
         else:
             exit(1)
 
-    if args.git_url:
+    if args.src_path:
+        pkg = {'pname': req.name, 'version': '0.0.0'}
+        src = args.src_path
+        pkg['src'] = src
+    elif args.git_url:
         pkg = {'pname': req.name, 'version': '0.0.0'}
         if args.git_rev:
             rev = args.git_rev
@@ -197,7 +208,9 @@ for spec in args.package_spec:
         print('building info for %s' % key, file=sys.stderr)
         data = {}
         data.update(pkg)
-        if args.git_url:
+        if args.src_path:
+            fetch_expr = src
+        elif args.git_url:
             fetch_expr = """builtins.fetchGit {
        url = %(url)s;
        rev = "%(rev)s";
@@ -232,7 +245,7 @@ callPackage
         if os.path.exists('%s/metadata.json' % dist_info):
             meta = Metadata('%s/metadata.json' % dist_info)
 
-            if args.git_url:
+            if args.src_path or args.git_url:
                 pkg.update({'version': meta.version})
 
             run_requires = meta.dependencies.get('run_requires', [])
@@ -360,7 +373,11 @@ callPackage
             call_args.append('inherit (%s) %s;' % (arg['expr'], ' '.join(arg['inherit'])))
     call_expr = ' \n          '.join(call_args)
 
-    if src.get('expr') == 'builtins.fetchGit':
+    rec_expr = ''
+    suffix_expr = ''
+    if isinstance(src, str):
+        fetch_expr = src
+    elif src.get('expr') == 'builtins.fetchGit':
         rec_expr = 'rec '
         suffix_expr = '\n       versionSuffix = "pre${toString src.revCount or 0}.${toString src.shortRev or "000000"}";'
         if 'ref' in src:
@@ -374,8 +391,6 @@ callPackage
          rev = "%(rev)s";
        }""" % src
     elif src.get('expr') == 'fetchurl':
-        rec_expr = ''
-        suffix_expr = ''
         fetch_expr = """fetchurl {
          url = "%(url)s";
          sha256 = "%(sha256)s";
