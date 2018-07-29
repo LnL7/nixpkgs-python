@@ -23,7 +23,7 @@ stdenv.mkDerivation (builtins.removeAttrs attrs ["withPackages"] // {
     mkdir -p $out/${pythonPlatform.sitePackages}
 
     for dep in $pythonDepends; do
-        lndir $dep/${pythonPlatform.sitePackages} $out/${pythonPlatform.sitePackages}
+        lndir -silent $dep/${pythonPlatform.sitePackages} $out/${pythonPlatform.sitePackages}
     done
 
     if [ -z "''${dontDetectConflicts:-}" ]; then
